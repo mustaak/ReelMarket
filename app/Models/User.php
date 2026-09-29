@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 
-#[Fillable(['name', 'email', 'password','status'])]
+#[Fillable(['name', 'email', 'password', 'status', 'type'])]
 #[Hidden(['password', 'remember_token'])]
 
 class User extends Authenticatable
@@ -31,7 +31,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'status' => 'boolean',
+            'type' => 'string',
         ];
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->type === 'super_admin' || $this->hasRole('Super Admin');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->type === 'admin' || $this->hasRole('Admin');
+    }
+
+    public function isUser(): bool
+    {
+        return $this->type === 'user' || $this->hasRole('User');
     }
 
     public function profile()

@@ -23,6 +23,16 @@
     --color-line: #e2dcec;
     --color-brand: #f2a007;
     --color-brand-ink: #2a1b00;
-    
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 }
 

@@ -43,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('Super Admin') ? true : null;
         });
 
+        Like::observe(LikeObserver::class);
+        Comment::observe(CommentObserver::class);
 
         View::composer('layouts.app', function ($view) {
             $trendingProducts = Product::query()

@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('components.layouts.app')]
 class ProductDetailPage extends Component
 {
     #[Locked]

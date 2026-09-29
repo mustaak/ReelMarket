@@ -8,17 +8,22 @@ use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Message;
 use App\Models\Post;
+use App\Models\PostImage;
 use App\Models\Reel;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class SocialNetworkSeeder extends Seeder
 {
     public function run(): void
     {
         // Ensure at least 10 normal users exist for realistic data
-        $userRole = \Spatie\Permission\Models\Role::where('name', 'User')->first();
+        $userRole = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'User',
+            'guard_name' => 'web',
+        ]);
 
         if (User::role('User')->count() < 10) {
             User::factory(10)->create()->each(function ($user) use ($userRole) {
@@ -28,11 +33,54 @@ class SocialNetworkSeeder extends Seeder
 
         $users = User::role('User')->get();
 
-        // Posts
+        $postImages = [
+            'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+        ];
+
+        $reelVideos = [
+            'https://www.w3schools.com/html/mov_bbb.mp4',
+            'https://www.w3schools.com/html/movie.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        ];
+
         $posts = Post::factory(20)->create();
 
-        // Reels
+        foreach ($posts as $index => $post) {
+            if ($post->images()->count() === 0) {
+                $imageUrl = $postImages[$index % count($postImages)];
+                $imagePath = $this->downloadMedia($imageUrl, 'posts/post-' . $post->id . '.jpg');
+
+                PostImage::create([
+                    'post_id' => $post->id,
+                    'image_path' => $imagePath,
+                    'sort_order' => 1,
+                ]);
+
+                $post->update(['image' => $imagePath]);
+            }
+        }
+
         $reels = Reel::factory(15)->create();
+
+        foreach ($reels as $index => $reel) {
+            $videoUrl = $reelVideos[$index % count($reelVideos)];
+            $videoPath = $this->downloadMedia($videoUrl, 'reels/reel-' . $reel->id . '.mp4');
+            $thumbnailPath = $this->downloadMedia(
+                $postImages[$index % count($postImages)],
+                'reels/reel-' . $reel->id . '-thumb.jpg'
+            );
+
+            $reel->update([
+                'video_path' => $videoPath,
+                'thumbnail' => $thumbnailPath,
+                'status' => 'published',
+            ]);
+        }
 
         // Likes (random users liking random posts/reels)
         foreach ($posts as $post) {
@@ -118,5 +166,27 @@ class SocialNetworkSeeder extends Seeder
                 'status' => fake()->randomElement(['pending', 'pending', 'reviewed', 'actioned']),
             ]);
         }
+    }
+
+    private function downloadMedia(string $url, string $relativePath): string
+    {
+        $storage = Storage::disk('public');
+        $directory = dirname($relativePath);
+
+        if ($directory !== '.') {
+            $storage->makeDirectory($directory);
+        }
+
+        $fullPath = $storage->path($relativePath);
+
+        if (! file_exists($fullPath)) {
+            $contents = @file_get_contents($url);
+
+            if ($contents !== false) {
+                file_put_contents($fullPath, $contents);
+            }
+        }
+
+        return $relativePath;
     }
 }

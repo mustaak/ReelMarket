@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use App\Services\CartService;
 use App\Models\Product;
 
+#[Layout('components.layouts.app')]
 class CartPage extends Component
 {
     public $voucherCode = '';
@@ -82,7 +84,7 @@ class CartPage extends Component
     public function render(CartService $cartService)
     {
         $cartItems = $cartService->items();
-        $subtotal = $cartItems->sum(fn($item) => $item['total'] * $item['qty']);
+        $subtotal = $cartItems->sum('total');
         $pickupFee = $cartItems->isNotEmpty() ? 99 : 0;
         $tax = $subtotal * 0.10; // 10% Tax example
         $total = max(0, ($subtotal + $pickupFee + $tax) - $this->appliedDiscount);
@@ -104,6 +106,6 @@ class CartPage extends Component
             'tax' => $tax,
             'total' => $total,
             'lowestPriceProducts' => $lowestPriceProducts,
-        ])->layout('layouts.app');
+        ]);
     }
 }

@@ -13,7 +13,7 @@ use App\Services\CartService;
 use App\Livewire\CartCount;
 use App\Livewire\CartDrawer;
 
- #[Layout('layouts.app')]
+ #[Layout('components.layouts.app')]
 class ShopPage extends Component
 {
     use WithPagination;

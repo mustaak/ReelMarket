@@ -215,13 +215,32 @@ unset($__componentSlots);
 unset($__split);
 ?>
 
-                <a href="" aria-label="Profile"
-                   class="rounded-xl p-1 transition hover:bg-white/5">
-                    <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
-                        <?php echo e(strtoupper(substr(auth()->user()->name ?? 'U', 0, 1))); ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+                    <div class="flex items-center gap-2">
+                        <a href="<?php echo e(route('profile')); ?>" aria-label="Profile"
+                           class="rounded-xl p-1 transition hover:bg-white/5">
+                            <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
+                                <?php echo e(strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1))); ?>
 
-                    </span>
-                </a>
+                            </span>
+                        </a>
+                        <form method="POST" action="<?php echo e(route('logout')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                <?php else: ?>
+                    <div class="flex items-center gap-2">
+                        <a href="<?php echo e(route('login')); ?>" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                            Login
+                        </a>
+                        <a href="<?php echo e(route('register')); ?>" class="theme-btn rounded-xl px-3 py-2 text-xs font-black text-slate-950">
+                            Sign Up
+                        </a>
+                    </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
         </div>
     </header>

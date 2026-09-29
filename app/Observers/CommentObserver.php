@@ -11,7 +11,14 @@ class CommentObserver
      */
     public function created(Comment $comment): void
     {
-        $comment->commentable()->increment('comments_count');
+        $commentable = $comment->commentable;
+
+        if (! $commentable) {
+            return;
+        }
+
+        $commentable->comments_count = (int) ($commentable->comments_count ?? 0) + 1;
+        $commentable->saveQuietly();
     }
 
     /**
@@ -27,7 +34,14 @@ class CommentObserver
      */
     public function deleted(Comment $comment): void
     {
-        $comment->commentable()->decrement('comments_count');
+        $commentable = $comment->commentable;
+
+        if (! $commentable) {
+            return;
+        }
+
+        $commentable->comments_count = max(0, (int) ($commentable->comments_count ?? 0) - 1);
+        $commentable->saveQuietly();
     }
 
     /**

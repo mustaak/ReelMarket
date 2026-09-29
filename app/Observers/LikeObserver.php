@@ -11,7 +11,14 @@ class LikeObserver
      */
     public function created(Like $like): void
     {
-       $like->likeable()->increment('likes_count');
+        $likeable = $like->likeable;
+
+        if (! $likeable) {
+            return;
+        }
+
+        $likeable->likes_count = (int) ($likeable->likes_count ?? 0) + 1;
+        $likeable->saveQuietly();
     }
 
     /**
@@ -27,7 +34,14 @@ class LikeObserver
      */
     public function deleted(Like $like): void
     {
-        $like->likeable()->decrement('likes_count');
+        $likeable = $like->likeable;
+
+        if (! $likeable) {
+            return;
+        }
+
+        $likeable->likes_count = max(0, (int) ($likeable->likes_count ?? 0) - 1);
+        $likeable->saveQuietly();
     }
 
     /**

@@ -97,12 +97,31 @@
 
                 @livewire('theme-switcher')
 
-                <a href="" aria-label="Profile"
-                   class="rounded-xl p-1 transition hover:bg-white/5">
-                    <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
-                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                    </span>
-                </a>
+                @auth
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('profile') }}" aria-label="Profile"
+                           class="rounded-xl p-1 transition hover:bg-white/5">
+                            <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
+                                {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
+                            </span>
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('login') }}" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                            Login
+                        </a>
+                        <a href="{{ route('register') }}" class="theme-btn rounded-xl px-3 py-2 text-xs font-black text-slate-950">
+                            Sign Up
+                        </a>
+                    </div>
+                @endauth
             </div>
         </div>
     </header>

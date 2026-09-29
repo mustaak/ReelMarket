@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('components.layouts.app')]
 class ReelsPage extends Component
 {
     /** @var array<int> Reel ids the current user has liked */

@@ -22,10 +22,11 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
-        $admin      = Role::firstOrCreate(['name' => 'Admin']);
-        $manager    = Role::firstOrCreate(['name' => 'Manager']);
-        $staff      = Role::firstOrCreate(['name' => 'Staff']);
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $admin      = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $manager    = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
+        $staff      = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);
+        $userRole   = Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
 
         // Super Admin gets everything (belt-and-suspenders alongside Gate::before)
         $superAdmin->syncPermissions(Permission::all());

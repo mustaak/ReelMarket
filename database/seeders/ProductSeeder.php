@@ -28,6 +28,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => 3999,
                 'stock' => 45,
                 'attributes' => ['Black', 'White'],
+                'images' => [
+                    'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
             [
                 'name' => 'Running Shoes',
@@ -37,6 +41,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => null,
                 'stock' => 30,
                 'attributes' => ['Red', 'Black', 'M', 'L', 'XL'],
+                'images' => [
+                    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
             [
                 'name' => 'Smart LED TV 43 inch',
@@ -46,6 +54,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => 28999,
                 'stock' => 12,
                 'attributes' => [],
+                'images' => [
+                    'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1490933991293-4e1d37c4d1ce?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
             [
                 'name' => 'Cotton Casual T-Shirt',
@@ -55,6 +67,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => 649,
                 'stock' => 100,
                 'attributes' => ['Blue', 'White', 'S', 'M', 'L', 'Cotton'],
+                'images' => [
+                    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
             [
                 'name' => 'Gaming Laptop 15.6"',
@@ -64,6 +80,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => null,
                 'stock' => 5,
                 'attributes' => [],
+                'images' => [
+                    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
             [
                 'name' => 'Yoga Mat',
@@ -73,6 +93,10 @@ class ProductSeeder extends Seeder
                 'sale_price' => 999,
                 'stock' => 0,
                 'attributes' => ['Green'],
+                'images' => [
+                    'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
+                    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
+                ],
             ],
         ];
 
@@ -101,62 +125,42 @@ class ProductSeeder extends Seeder
                 ]
             );
 
-            // Attach attribute values
             if (! empty($data['attributes'])) {
                 $valueIds = AttributeValue::whereIn('value', $data['attributes'])->pluck('id');
                 $product->attributeValues()->sync($valueIds);
             }
 
-            // Generate 2 placeholder images per product
             if ($product->images()->count() === 0) {
-                for ($i = 1; $i <= 2; $i++) {
-                    $imagePath = $this->makePlaceholderImage(
-                        $data['name'] . " #{$i}",
-                        $slug . "-{$i}",
-                        $this->colors[($index + $i) % count($this->colors)]
-                    );
+                foreach ($data['images'] as $imageIndex => $imageUrl) {
+                    $imagePath = $this->downloadMedia($imageUrl, "products/{$slug}-{$imageIndex}.jpg");
 
                     $product->images()->create([
                         'image' => $imagePath,
-                        'sort_order' => $i,
+                        'sort_order' => $imageIndex + 1,
                     ]);
                 }
             }
         }
     }
 
-    private function makePlaceholderImage(string $label, string $slug, array $rgb): string
+    private function downloadMedia(string $url, string $relativePath): string
     {
-        $relativePath = "products/{$slug}.png";
-        $fullPath = Storage::disk('public')->path($relativePath);
+        $storage = Storage::disk('public');
+        $directory = dirname($relativePath);
 
-        if (file_exists($fullPath)) {
-            return $relativePath;
+        if ($directory !== '.') {
+            $storage->makeDirectory($directory);
         }
 
-        $width = 400;
-        $height = 400;
+        $fullPath = $storage->path($relativePath);
 
-        $image = imagecreatetruecolor($width, $height);
-        $bgColor = imagecolorallocate($image, $rgb[0], $rgb[1], $rgb[2]);
-        $textColor = imagecolorallocate($image, 255, 255, 255);
+        if (! file_exists($fullPath)) {
+            $contents = @file_get_contents($url);
 
-        imagefilledrectangle($image, 0, 0, $width, $height, $bgColor);
-
-        $font = 4;
-        $lines = explode(' ', $label);
-        $y = ($height / 2) - 20;
-
-        foreach (array_chunk($lines, 2) as $chunk) {
-            $line = implode(' ', $chunk);
-            $textWidth = imagefontwidth($font) * strlen($line);
-            $x = (int) (($width - $textWidth) / 2);
-            imagestring($image, $font, $x, (int) $y, $line, $textColor);
-            $y += 20;
+            if ($contents !== false) {
+                file_put_contents($fullPath, $contents);
+            }
         }
-
-        imagepng($image, $fullPath);
-        imagedestroy($image);
 
         return $relativePath;
     }

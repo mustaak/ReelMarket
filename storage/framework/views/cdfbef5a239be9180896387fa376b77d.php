@@ -1,0 +1,3 @@
+<svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
+</svg><?php /**PATH /var/www/html/ecommerce/storage/framework/views/2a0fa7f0a5461d10ff2ce2f22e26c27a.blade.php ENDPATH**/ ?>

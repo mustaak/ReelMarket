@@ -155,9 +155,11 @@ class HomeFeed extends Component
             })
             ->latest()
             ->paginate(10);
+
+            
         
 
-        // /dd($posts);
+        dd($posts);
 
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,

@@ -155,7 +155,7 @@ class HomeFeed extends Component
             })
             ->latest()
             ->paginate(10);
-            
+        
 
         // /dd($posts);
 

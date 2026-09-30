@@ -3,6 +3,9 @@
 namespace App\Observers;
 
 use App\Models\Like;
+use App\Models\Reel;
+use App\Models\User;
+use App\Notifications\SocialActivityNotification;
 
 class LikeObserver
 {
@@ -19,6 +22,19 @@ class LikeObserver
 
         $likeable->likes_count = (int) ($likeable->likes_count ?? 0) + 1;
         $likeable->saveQuietly();
+
+        $recipient = $likeable->user;
+        $actor = $like->user;
+
+        if ($recipient instanceof User && $actor instanceof User && ! $recipient->is($actor)) {
+            $contentType = $likeable instanceof Reel ? 'reel' : 'post';
+            $recipient->notify(new SocialActivityNotification(
+                $actor,
+                'like',
+                "liked your {$contentType}.",
+                route('home'),
+            ));
+        }
     }
 
     /**

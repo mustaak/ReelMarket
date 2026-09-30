@@ -6,9 +6,13 @@ use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Reel;
+use App\Models\User;
+use App\Models\ReelView;
+use App\Services\FollowService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
+
 
 #[Layout('components.layouts.app')]
 class ReelsPage extends Component
@@ -16,8 +20,10 @@ class ReelsPage extends Component
     /** @var array<int> Reel ids the current user has liked */
     public array $likedReelIds = [];
 
-    /** @var array<int> User ids the current user follows */
-    public array $followingIds = [];
+    /** @var array<int, string> Follow status indexed by followed user id */
+    public array $followStatuses = [];
+
+    public ?int $focusedReelId = null;
 
     public ?int $activeCommentsReelId = null;
 
@@ -25,6 +31,14 @@ class ReelsPage extends Component
 
     public function mount(): void
     {
+        $focusedReelId = request()->integer('reel');
+
+        
+
+        if ($focusedReelId > 0) {
+            $this->focusedReelId = $focusedReelId;
+        }
+
         if (auth()->check()) {
             $this->likedReelIds = Like::query()
                 ->where('user_id', auth()->id())
@@ -32,9 +46,9 @@ class ReelsPage extends Component
                 ->pluck('likeable_id')
                 ->all();
 
-            $this->followingIds = Follow::query()
+            $this->followStatuses = Follow::query()
                 ->where('follower_id', auth()->id())
-                ->pluck('following_id')
+                ->pluck('status', 'following_id')
                 ->all();
         }
     }
@@ -69,7 +83,7 @@ class ReelsPage extends Component
         // Reel::likes_count is kept in sync by LikeObserver
     }
 
-    public function toggleFollow(int $userId): void
+    public function toggleFollow(int $userId, FollowService $followService): void
     {
         if (! auth()->check()) {
             $this->dispatch('notify', type: 'info', message: 'Please log in to follow people.');
@@ -81,19 +95,20 @@ class ReelsPage extends Component
             return;
         }
 
-        $existing = Follow::query()
-            ->where('follower_id', auth()->id())
-            ->where('following_id', $userId)
-            ->first();
+        $follower = auth()->user();
 
-        if ($existing) {
-            $existing->delete();
-            $this->followingIds = array_values(array_diff($this->followingIds, [$userId]));
-        } else {
-            Follow::create(['follower_id' => auth()->id(), 'following_id' => $userId]);
-            $this->followingIds[] = $userId;
+        if (! $follower instanceof User) {
+            return;
         }
-        // follower/following counts are kept in sync by FollowObserver
+
+        $followedUser = User::findOrFail($userId);
+        $follow = $followService->toggle($follower, $followedUser);
+
+        if ($follow) {
+            $this->followStatuses[$userId] = $follow->status;
+        } else {
+            unset($this->followStatuses[$userId]);
+        }
     }
 
     public function openComments(int $reelId): void
@@ -131,23 +146,45 @@ class ReelsPage extends Component
     #[On('reel-viewed')]
     public function markViewed(int $reelId): void
     {
-        Reel::whereKey($reelId)->increment('views_count');
+        if (! auth()->check()) {
+            return;
+        }
+
+        $view = ReelView::firstOrCreate([
+            'reel_id' => $reelId,
+            'user_id' => auth()->id(),
+        ]);
+
+        if ($view->wasRecentlyCreated) {
+            Reel::whereKey($reelId)->increment('views_count');
+        }
     }
 
     public function render()
     {
-        $reels = Reel::query()
-            ->where('status', 'published')
+        $viewer = auth()->user();
+        
+
+        $reelsQuery = Reel::query()
+            ->visibleTo($viewer instanceof User ? $viewer : null)
             ->with([
                 'user:id,name',
                 'user.profile:id,user_id,profile_picture',
                 'product:id,name,slug,price,sale_price',
                 'comments' => fn ($q) => $q->latest()->limit(20)->with('user:id,name'),
-            ])
-            ->latest('id')
-            ->limit(20)
-            ->get();
+            ]);
 
-        return view('livewire.reels-page', compact('reels'));
+        if ($this->focusedReelId) {
+            $reelsQuery->whereKey($this->focusedReelId);
+        } else {
+            $reelsQuery->latest('id')->limit(20);
+        }
+
+        $reels = $reelsQuery->get();
+
+        return view('livewire.reels-page', [
+            'reels' => $reels,
+            'followStatuses' => $this->followStatuses,
+        ]);
     }
 }

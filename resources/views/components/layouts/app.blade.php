@@ -26,6 +26,11 @@
         ['route' => 'reels.index', 'label' => 'Reels',     'icon' => 'heroicon-o-play-circle',            'active' => 'reels.*'],
         ['route' => 'cart.index',  'label' => 'Cart',      'icon' => 'heroicon-o-shopping-cart',          'active' => 'cart.*'],
     ];
+
+    if (auth()->check()) {
+        $navLinks[] = ['route' => 'notifications.index', 'label' => 'Activity', 'icon' => 'heroicon-o-bell', 'active' => 'notifications.*', 'unreadNotifications' => true];
+        $navLinks[] = ['route' => 'messages.index', 'label' => 'Messages', 'icon' => 'heroicon-o-chat-bubble-left-right', 'active' => 'messages.*', 'unreadMessages' => true];
+    }
 @endphp
 
 <!DOCTYPE html>
@@ -64,14 +69,38 @@
 <body class="min-h-dvh text-slate-100 antialiased transition-colors duration-300">
 
     <!-- MOBILE HEADER -->
-    <header class="theme-card/95 sticky top-0 z-40 flex items-center justify-between border-b border-slate-800/80 px-4 py-3 backdrop-blur-md md:hidden">
-        <a href="{{ route('home') }}" class="flex items-center gap-2.5">
-            <span class="theme-btn flex size-8 items-center justify-center rounded-xl text-base font-black">Y</span>
-            <span class="text-lg font-black tracking-wide text-white">YourBrand</span>
-        </a>
-        @livewire('theme-switcher')
+    <header class="theme-card/95 sticky top-0 z-40 border-b border-slate-800/80 px-4 py-3 backdrop-blur-md md:hidden">
+        <div class="flex items-center justify-between">
+            <!-- Logo -->
+            <a href="{{ route('home') }}" class="flex items-center gap-2.5">
+                <span class="theme-btn flex size-8 items-center justify-center rounded-xl text-base font-black">
+                    Y
+                </span>
+                <span class="text-lg font-black tracking-wide text-white">
+                    YourBrand
+                </span>
+            </a>
+            <!-- Right Side -->
+            <div class="flex items-center gap-2">
+                @livewire('theme-switcher')
+                @auth
+                    <!-- Profile -->
+                    <a href="{{ route('profile') }}"
+                    aria-label="Profile"
+                    class="rounded-xl p-1 transition hover:bg-white/5">
+                        <span class="theme-soft-bg theme-text flex size-9 items-center justify-center rounded-full text-sm font-black">
+                            {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
+                        </span>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}"
+                    class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200">
+                        Login
+                    </a>
+                @endauth
+            </div>
+        </div>
     </header>
-
     <!-- DESKTOP HEADER -->
     <header class="theme-card/95 sticky top-0 z-40 hidden border-b border-slate-800/80 backdrop-blur-md md:block">
         <div class="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3 lg:px-8">
@@ -141,7 +170,15 @@
                                    'theme-soft-bg theme-text font-bold' => $isActive,
                                    'font-medium text-slate-400 hover:text-white' => ! $isActive,
                                ])>
-                                <x-dynamic-component :component="$link['icon']" class="size-5" />
+                                <span class="relative flex size-5 shrink-0 items-center justify-center">
+                                    <x-dynamic-component :component="$link['icon']" class="size-5" />
+                                    @if($link['unreadMessages'] ?? false)
+                                        <livewire:unread-message-count />
+                                    @endif
+                                    @if($link['unreadNotifications'] ?? false)
+                                        <livewire:unread-notification-count />
+                                    @endif
+                                </span>
                                 <span>{{ $link['label'] }}</span>
                             </a>
                         @endforeach
@@ -197,27 +234,172 @@
 
     <!-- MOBILE BOTTOM NAV -->
     <nav class="theme-card fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden">
-        <div class="mx-auto flex max-w-md items-stretch justify-around">
-            @foreach ($navLinks as $link)
-                @php $isActive = request()->routeIs($link['active']); @endphp
-                <a href="{{ route($link['route']) }}"
-                   aria-label="{{ $link['label'] }}"
-                   aria-current="{{ $isActive ? 'page' : 'false' }}"
-                   class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ $isActive ? 'theme-text' : 'text-slate-500' }}">
-                    <x-dynamic-component :component="$link['icon']" class="size-6" style="{{ $isActive ? 'stroke-width: 2.2' : '' }}" />
-                    <span class="text-[10px] leading-none {{ $isActive ? 'font-bold' : 'font-medium' }}">{{ $link['label'] }}</span>
+        <div class="mx-auto flex max-w-md items-center">
+            <!-- Primary 4 -->
+            <div class="flex flex-1 items-stretch justify-around">
+                <!-- Home -->
+                <a href="{{ route('home') }}"
+                aria-label="Home"
+                class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('home') ? 'theme-text' : 'text-slate-500' }}">
+                    <x-heroicon-o-home class="size-6" />
+                    <span class="text-[10px] leading-none {{ request()->routeIs('home') ? 'font-bold' : 'font-medium' }}">
+                        Home
+                    </span>
                 </a>
-            @endforeach
+                <!-- Shop -->
+                <a href="{{ route('shop.index') }}"
+                aria-label="Shop"
+                class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('shop.*') ? 'theme-text' : 'text-slate-500' }}">
+                    <x-heroicon-o-shopping-bag class="size-6" />
+                    <span class="text-[10px] leading-none {{ request()->routeIs('shop.*') ? 'font-bold' : 'font-medium' }}">
+                        Shop
+                    </span>
+                </a>
+                <!-- Reels -->
+                <a href="{{ route('reels.index') }}"
+                aria-label="Reels"
+                class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('reels.*') ? 'theme-text' : 'text-slate-500' }}">
+                    <x-heroicon-o-play-circle class="size-6" />
+                    <span class="text-[10px] leading-none {{ request()->routeIs('reels.*') ? 'font-bold' : 'font-medium' }}">
+                        Reels
+                    </span>
+                </a>
+                <!-- Cart -->
+                <button type="button"
+                        onclick="Livewire.dispatch('open-cart')"
+                        aria-label="Cart"
+                        class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('cart.index') ? 'theme-text' : 'text-slate-500' }}">
+                    <span class="relative">
+                        <x-heroicon-o-shopping-cart class="size-6" />
+                        <span class="absolute -right-2 -top-1.5">
+                            <livewire:cart-count />
+                        </span>
+                    </span>
+                    <span class="text-[10px] font-medium leading-none">
+                        Cart
+                    </span>
+                </button>
+            </div>
+            <!-- More / Slider -->
+            <div class="relative shrink-0">
+                <details class="group relative">
+                    <summary
+                        class="flex cursor-pointer list-none flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-slate-500 transition hover:text-white">
+                        <x-heroicon-o-ellipsis-horizontal-circle class="size-6" />
+                        <span class="text-[10px] font-medium leading-none">
+                            More
+                        </span>
+                    </summary>
+                    <!-- Slider -->
+                    <div class="theme-card absolute bottom-full right-0 mb-2 w-[300px] rounded-2xl border border-slate-800/80 p-2 shadow-2xl">
 
-            <button type="button" onclick="Livewire.dispatch('open-cart')"
-                    aria-label="Cart"
-                    class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('cart.index') ? 'theme-text' : 'text-slate-500' }}">
-                <span class="relative">
-                    <x-heroicon-o-shopping-cart class="size-6" />
-                    <span class="absolute -right-2 -top-1.5"><livewire:cart-count /></span>
-                </span>
-                <span class="text-[10px] font-medium leading-none">Cart</span>
-            </button>
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+
+                            @auth
+
+                                <!-- Activity -->
+                                <a href="{{ route('notifications.index') }}"
+                                class="theme-inner flex min-w-[90px] snap-start flex-col items-center justify-center gap-1 rounded-xl border border-slate-800 px-3 py-3 text-slate-300 transition hover:text-white">
+
+                                    <span class="relative">
+                                        <x-heroicon-o-bell class="size-6" />
+
+                                        <livewire:unread-notification-count />
+                                    </span>
+
+                                    <span class="text-[10px] font-semibold">
+                                        Activity
+                                    </span>
+                                </a>
+
+
+                                <!-- Messages -->
+                                <a href="{{ route('messages.index') }}"
+                                class="theme-inner flex min-w-[90px] snap-start flex-col items-center justify-center gap-1 rounded-xl border border-slate-800 px-3 py-3 text-slate-300 transition hover:text-white">
+
+                                    <span class="relative">
+                                        <x-heroicon-o-chat-bubble-left-right class="size-6" />
+
+                                        <livewire:unread-message-count />
+                                    </span>
+
+                                    <span class="text-[10px] font-semibold">
+                                        Messages
+                                    </span>
+                                </a>
+
+
+                                <!-- Profile -->
+                                <a href="{{ route('profile') }}"
+                                class="theme-inner flex min-w-[90px] snap-start flex-col items-center justify-center gap-1 rounded-xl border border-slate-800 px-3 py-3 text-slate-300 transition hover:text-white">
+
+                                    <span class="theme-soft-bg theme-text flex size-6 items-center justify-center rounded-full text-[10px] font-black">
+                                        {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
+                                    </span>
+
+                                    <span class="text-[10px] font-semibold">
+                                        Profile
+                                    </span>
+                                </a>
+
+
+                                <!-- Logout -->
+                                <form method="POST"
+                                    action="{{ route('logout') }}"
+                                    class="min-w-[90px] snap-start">
+
+                                    @csrf
+
+                                    <button type="submit"
+                                            class="theme-inner flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-slate-800 px-3 py-3 text-slate-300 transition hover:text-white">
+
+                                        <x-heroicon-o-arrow-right-on-rectangle class="size-6" />
+
+                                        <span class="text-[10px] font-semibold">
+                                            Logout
+                                        </span>
+                                    </button>
+                                </form>
+
+                            @else
+
+                                <a href="{{ route('login') }}"
+                                class="theme-inner flex min-w-[90px] snap-start flex-col items-center justify-center gap-1 rounded-xl border border-slate-800 px-3 py-3 text-slate-300">
+
+                                    <x-heroicon-o-arrow-right-end-on-rectangle class="size-6" />
+
+                                    <span class="text-[10px] font-semibold">
+                                        Login
+                                    </span>
+                                </a>
+
+                                <a href="{{ route('register') }}"
+                                class="theme-btn flex min-w-[90px] snap-start flex-col items-center justify-center gap-1 rounded-xl px-3 py-3">
+
+                                    <x-heroicon-o-user-plus class="size-6" />
+
+                                    <span class="text-[10px] font-semibold">
+                                        Sign Up
+                                    </span>
+                                </a>
+
+                            @endauth
+
+                        </div>
+
+                        <!-- Slider hint -->
+                        @auth
+                            <div class="mt-2 text-center text-[9px] text-slate-500">
+                                Swipe to see more
+                            </div>
+                        @endauth
+
+                    </div>
+
+                </details>
+
+            </div>
+
         </div>
     </nav>
 

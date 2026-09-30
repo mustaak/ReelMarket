@@ -2,27 +2,16 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\ServiceProvider;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use App\Services\FilamentPermissionService;
-use App\Models\Like;
 use App\Models\Comment;
-use App\Observers\LikeObserver;
-use App\Observers\CommentObserver;
 use App\Models\Follow;
-use App\Observers\FollowObserver;
-use App\Models\Post;
-use App\Observers\PostObserver;
-use App\Models\User;
+use App\Models\Like;
 use App\Models\Product;
+use App\Observers\CommentObserver;
+use App\Observers\FollowObserver;
+use App\Observers\LikeObserver;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
-
-
-use App\Observers\UserObserver;
-
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
 
         Like::observe(LikeObserver::class);
         Comment::observe(CommentObserver::class);
+        Follow::observe(FollowObserver::class);
 
         View::composer('layouts.app', function ($view) {
             $trendingProducts = Product::query()

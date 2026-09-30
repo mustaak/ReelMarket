@@ -102,21 +102,14 @@
                         </div>
 
                         <div class="flex items-center justify-between text-slate-300">
-                            <span>Pickup fee</span>
-                            <span class="font-semibold text-white">₹{{ number_format((float) $pickupFee, 0) }}</span>
+                            <span>Delivery</span>
+                            <span class="font-semibold text-white">₹{{ number_format((float) $shippingFee, 2) }}</span>
                         </div>
 
                         <div class="flex items-center justify-between text-slate-300">
                             <span>Tax</span>
                             <span class="font-semibold text-white">₹{{ number_format((float) $tax, 0) }}</span>
                         </div>
-
-                        @if($appliedDiscount > 0)
-                            <div class="flex items-center justify-between text-emerald-300">
-                                <span>Discount</span>
-                                <span class="font-semibold">-₹{{ number_format((float) $appliedDiscount, 0) }}</span>
-                            </div>
-                        @endif
 
                         <div class="border-t border-slate-800/80 pt-3">
                             <div class="flex items-center justify-between">
@@ -126,9 +119,11 @@
                         </div>
                     </div>
 
-                    <button type="button" class="theme-btn mt-5 w-full rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-wide">
+                    <p class="mt-3 text-[11px] leading-5 text-slate-500">Delivery charges and tax rules are not configured yet; no extra fees are included.</p>
+
+                    <a href="{{ route('checkout.index') }}" class="theme-btn mt-5 flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-wide">
                         Proceed to checkout
-                    </button>
+                    </a>
 
                     <a href="{{ route('shop.index') }}" class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-sm font-bold text-slate-200 transition hover:text-white">
                         Continue shopping
@@ -136,23 +131,6 @@
                     </a>
                 </div>
 
-                <div class="theme-card rounded-[28px] border border-slate-800/80 p-5 shadow-xl">
-                    <form wire:submit.prevent="applyVoucher" class="space-y-3">
-                        <label for="voucher" class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Voucher code</label>
-                        <input wire:model="voucherCode" id="voucher" type="text" placeholder="e.g. SAVE100" class="w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none" />
-
-                        @if($voucherError)
-                            <p class="text-xs font-medium text-rose-400">{{ $voucherError }}</p>
-                        @endif
-                        @if($voucherSuccess)
-                            <p class="text-xs font-medium text-emerald-400">{{ $voucherSuccess }}</p>
-                        @endif
-
-                        <button type="submit" class="theme-btn w-full rounded-2xl px-4 py-3 text-sm font-black uppercase tracking-wide">
-                            Apply code
-                        </button>
-                    </form>
-                </div>
             </aside>
         </div>
     @else

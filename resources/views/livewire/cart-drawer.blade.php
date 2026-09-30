@@ -89,9 +89,10 @@
                             <b class="theme-text text-lg">{{ $money($subtotal) }}</b>
                         </div>
                         <p class="mt-1 text-xs text-slate-500">Shipping and taxes are calculated at checkout.</p>
-                        <button type="button" disabled
-                                class="theme-btn mt-3 w-full cursor-not-allowed rounded-xl px-6 py-3 text-sm font-bold opacity-60">
-                            Checkout (next step)
+                        <button type="button"
+                                onclick="window.location.href='{{ route('checkout.index') }}'"
+                                class="theme-btn mt-3 w-full rounded-xl px-6 py-3 text-sm font-bold">
+                            Checkout
                         </button>
                     </footer>
                 @endif

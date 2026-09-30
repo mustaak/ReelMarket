@@ -3,6 +3,8 @@
 namespace App\Observers;
 
 use App\Models\Comment;
+use App\Models\User;
+use App\Notifications\SocialActivityNotification;
 
 class CommentObserver
 {
@@ -19,6 +21,19 @@ class CommentObserver
 
         $commentable->comments_count = (int) ($commentable->comments_count ?? 0) + 1;
         $commentable->saveQuietly();
+
+        $recipient = $commentable->user;
+        $actor = $comment->user;
+
+        if ($recipient instanceof User && $actor instanceof User && ! $recipient->is($actor)) {
+            $contentType = $commentable instanceof \App\Models\Reel ? 'reel' : 'post';
+            $recipient->notify(new SocialActivityNotification(
+                $actor,
+                'comment',
+                "commented on your {$contentType}.",
+                route('home'),
+            ));
+        }
     }
 
     /**

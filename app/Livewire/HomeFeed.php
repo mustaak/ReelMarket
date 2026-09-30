@@ -3,15 +3,19 @@
 namespace App\Livewire;
 
 use App\Models\Comment;
+use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\FollowService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 class HomeFeed extends Component
 {
     public array $likedPostIds = [];
+
+    public array $followStatuses = [];
 
     public ?int $activeCommentsPostId = null;
 
@@ -25,19 +29,35 @@ class HomeFeed extends Component
                 ->where('likeable_type', Post::class)
                 ->pluck('likeable_id')
                 ->all();
+
+            $this->followStatuses = Follow::query()
+                ->where('follower_id', auth()->id())
+                ->pluck('status', 'following_id')
+                ->all();
         }
     }
 
-    public function toggleFollow($userId)
+    public function toggleFollow(int $userId, FollowService $followService): void
     {
         $currentUser = auth()->user();
 
-        if (! $currentUser) {
-            return $this->redirectRoute('login');
+        if (! $currentUser instanceof User) {
+            $this->redirectRoute('login');
+
+            return;
         }
 
-        if ($currentUser->id !== (int) $userId) {
-            $currentUser->following()->toggle($userId);
+        if ($currentUser->id === $userId) {
+            return;
+        }
+
+        $followedUser = User::findOrFail($userId);
+        $follow = $followService->toggle($currentUser, $followedUser);
+
+        if ($follow) {
+            $this->followStatuses[$userId] = $follow->status;
+        } else {
+            unset($this->followStatuses[$userId]);
         }
     }
 
@@ -112,7 +132,8 @@ class HomeFeed extends Component
         if ($currentUser) {
             $storyUsers = User::with('profile')
                 ->whereHas('followers', function ($query) use ($currentUser) {
-                    $query->where('follower_id', $currentUser->id);
+                    $query->where('follower_id', $currentUser->id)
+                        ->where('follows.status', 'accepted');
                 })
                 ->where('status', true)
                 ->withoutRole(['Admin', 'Super Admin'])
@@ -128,15 +149,19 @@ class HomeFeed extends Component
             'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
             'product.images',
         ])
+            ->visibleTo($currentUser instanceof User ? $currentUser : null)
             ->whereHas('user', function ($query) {
                 $query->withoutRole(['Admin', 'Super Admin']);
             })
             ->latest()
             ->paginate(10);
 
+        // /dd($posts);
+
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,
             'posts' => $posts,
+            'followStatuses' => $this->followStatuses,
         ]);
     }
 }

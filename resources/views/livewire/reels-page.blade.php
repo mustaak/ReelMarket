@@ -2,18 +2,27 @@
      class="h-[calc(100dvh-4rem)] w-full snap-y snap-mandatory overflow-y-scroll scroll-smooth bg-black md:h-[calc(100dvh-4.5rem)]"
      style="scrollbar-width: none;">
 
+    @auth
+        <a href="{{ route('reels.create') }}" aria-label="Create reel" title="Create reel" class="theme-btn fixed right-4 top-20 z-40 flex size-11 items-center justify-center rounded-full shadow-lg md:right-8 md:top-24">
+            <x-heroicon-o-plus class="size-5" />
+        </a>
+    @endauth
+
     @forelse ($reels as $reel)
         @php
             $videoUrl = $reel->video_path ? asset('storage/' . $reel->video_path) : null;
             $posterUrl = $reel->thumbnail ? asset('storage/' . $reel->thumbnail) : null;
             $avatar = $reel->user->profile?->profile_picture;
             $liked = in_array($reel->id, $likedReelIds);
-            $following = in_array($reel->user_id, $followingIds);
+            $followStatus = $followStatuses[$reel->user_id] ?? null;
+            $following = $followStatus === 'accepted';
+            $followRequested = $followStatus === 'pending';
             $onSale = $reel->product && (float) $reel->product->sale_price > 0 && (float) $reel->product->sale_price < (float) $reel->product->price;
             $money = fn ($v) => '₹' . number_format($v, 0);
         @endphp
 
         <section wire:key="reel-{{ $reel->id }}"
+                 id="reel-{{ $reel->id }}"
                  data-reel="{{ $reel->id }}"
                  class="relative flex h-full w-full snap-start snap-always items-center justify-center">
 
@@ -35,19 +44,21 @@
 
                 <!-- Top: creator + follow -->
                 <div class="pointer-events-auto absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] flex items-center gap-2">
-                    <span class="theme-soft-bg flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/25">
-                        @if ($avatar)
-                            <img src="{{ asset('storage/' . $avatar) }}" alt="" class="size-full object-cover">
-                        @else
-                            <span class="theme-text text-sm font-black">{{ strtoupper(substr($reel->user->name, 0, 1)) }}</span>
-                        @endif
-                    </span>
-                    <span class="min-w-0 flex-1 truncate text-sm font-bold text-white drop-shadow">{{ $reel->user->name }}</span>
+                    <a href="{{ route('users.show', $reel->user) }}" class="flex min-w-0 flex-1 items-center gap-2">
+                        <span class="theme-soft-bg flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/25">
+                            @if ($avatar)
+                                <img src="{{ asset('storage/' . $avatar) }}" alt="" class="size-full object-cover">
+                            @else
+                                <span class="theme-text text-sm font-black">{{ strtoupper(substr($reel->user->name, 0, 1)) }}</span>
+                            @endif
+                        </span>
+                        <span class="min-w-0 truncate text-sm font-bold text-white drop-shadow">{{ $reel->user->name }}</span>
+                    </a>
 
-                    @if (auth()->id() !== $reel->user_id)
+                    @if (auth()->check() && auth()->id() !== $reel->user_id)
                         <button type="button" wire:click="toggleFollow({{ $reel->user_id }})"
-                                class="{{ $following ? 'border border-white/50 text-white' : 'theme-btn' }} shrink-0 rounded-full px-3 py-1 text-[11px] font-extrabold">
-                            {{ $following ? 'Following' : 'Follow' }}
+                                class="{{ $following || $followRequested ? 'border border-white/50 text-white' : 'theme-btn' }} shrink-0 rounded-full px-3 py-1 text-[11px] font-extrabold">
+                            {{ $following ? 'Following' : ($followRequested ? 'Requested' : 'Follow') }}
                         </button>
                     @endif
 

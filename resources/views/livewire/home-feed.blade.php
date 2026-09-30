@@ -1,50 +1,40 @@
 <div class="mx-auto w-full max-w-2xl space-y-5 md:space-y-6">
-    <section class="theme-card overflow-hidden rounded-[28px] border border-slate-800/80 shadow-2xl">
-        <div class="flex flex-col gap-4 p-4 sm:p-5 md:p-6">
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Discover</p>
-                    <h1 class="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Fresh finds for your day</h1>
-                </div>
-                <a href="{{ route('shop.index') }}" class="theme-btn hidden rounded-full px-4 py-2 text-xs font-black uppercase tracking-wide sm:inline-flex">
-                    Explore Shop
+    <section class="flex items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.22em] theme-text">YourBrand</p>
+            <h1 class="mt-1 text-2xl font-black text-white">Your feed</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('shop.index') }}" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                Shop
+            </a>
+            @auth
+                <a href="{{ route('posts.create') }}" class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
+                    <x-heroicon-o-plus class="size-4" />
+                    <span>Create post</span>
                 </a>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-3">
-                <div class="theme-inner rounded-2xl border border-slate-800/80 p-3">
-                    <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Trending</p>
-                    <p class="mt-2 text-lg font-black text-white">120+</p>
-                    <p class="text-xs text-slate-400">New arrivals</p>
-                </div>
-                <div class="theme-inner rounded-2xl border border-slate-800/80 p-3">
-                    <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Creators</p>
-                    <p class="mt-2 text-lg font-black text-white">24K</p>
-                    <p class="text-xs text-slate-400">Community picks</p>
-                </div>
-                <div class="theme-inner rounded-2xl border border-slate-800/80 p-3">
-                    <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Saved</p>
-                    <p class="mt-2 text-lg font-black text-white">8.4K</p>
-                    <p class="text-xs text-slate-400">Wishlist items</p>
-                </div>
-            </div>
+            @else
+                <a href="{{ route('login') }}" class="theme-btn rounded-lg px-3 py-2 text-xs font-black">
+                    Join
+                </a>
+            @endauth
         </div>
     </section>
 
     @if(isset($storyUsers) && $storyUsers->isNotEmpty())
-        <section class="theme-card rounded-[28px] border border-slate-800/80 p-4 shadow-xl sm:p-5">
+        <section class="theme-card rounded-lg border border-slate-800/80 p-4 shadow-xl sm:p-5">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-300">Following</h2>
-                <span class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $storyUsers->count() }} online</span>
+                <span class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $storyUsers->count() }} creators</span>
             </div>
 
             <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
                 @foreach($storyUsers as $sUser)
-                    <div wire:key="story-user-{{ $sUser->id }}" class="flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center">
+                    <a href="{{ route('users.show', $sUser) }}" wire:key="story-user-{{ $sUser->id }}" class="flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center">
                         <div class="relative size-16 rounded-full p-[2px] theme-btn shadow-lg shadow-black/30">
                             <div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950">
-                                @if(optional($sUser->profile)->avatar)
-                                    <img src="{{ asset('storage/' . $sUser->profile->avatar) }}" alt="{{ $sUser->name }}" class="h-full w-full object-cover" />
+                                @if(optional($sUser->profile)->profile_picture)
+                                    <img src="{{ asset('storage/' . $sUser->profile->profile_picture) }}" alt="{{ $sUser->name }}" class="h-full w-full object-cover" />
                                 @else
                                     <span class="text-sm font-black uppercase text-black">
                                         {{ Str::substr($sUser->name, 0, 1) }}
@@ -55,7 +45,7 @@
                         <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
                             {{ Str::before($sUser->name, ' ') }}
                         </span>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </section>
@@ -65,18 +55,20 @@
         @php
             $author = $post->user;
             $authorProfile = $author?->profile;
-            $isFollowing = auth()->check() && auth()->user()->following->contains('id', $post->user_id);
+            $followStatus = $followStatuses[$post->user_id] ?? null;
+            $isFollowing = $followStatus === 'accepted';
+            $isFollowRequested = $followStatus === 'pending';
             $isLiked = auth()->check() && in_array($post->id, $likedPostIds, true);
             $postImage = $post->image ?: ($post->images?->first()?->image_path ?? null);
             $productImage = $post->product?->images?->first()?->image;
         @endphp
 
-        <article wire:key="post-card-{{ $post->id }}" class="theme-card overflow-hidden rounded-[28px] border border-slate-800/80 shadow-xl">
+        <article wire:key="post-card-{{ $post->id }}" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
             <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
-                <div class="flex items-center gap-3 min-w-0">
+                <a href="{{ route('users.show', $author) }}" class="flex min-w-0 items-center gap-3">
                     <div class="flex size-11 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
-                        @if($authorProfile?->avatar)
-                            <img src="{{ asset('storage/' . $authorProfile->avatar) }}" alt="{{ $author?->name }}" class="h-full w-full object-cover" />
+                        @if($authorProfile?->profile_picture)
+                            <img src="{{ asset('storage/' . $authorProfile->profile_picture) }}" alt="{{ $author?->name }}" class="h-full w-full object-cover" />
                         @else
                             {{ Str::substr($author?->name ?? 'U', 0, 2) }}
                         @endif
@@ -93,14 +85,14 @@
                         </div>
                         <p class="text-[11px] text-slate-400">{{ $post->created_at->diffForHumans() }}</p>
                     </div>
-                </div>
+                </a>
 
                 @if(auth()->check() && auth()->id() !== $post->user_id)
                     <button
                         wire:click="toggleFollow({{ $post->user_id }})"
                         type="button"
-                        class="rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition {{ $isFollowing ? 'border-slate-700 bg-slate-900 text-slate-200' : 'theme-btn text-black' }}">
-                        {{ $isFollowing ? 'Following' : 'Follow' }}
+                        class="rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition {{ $isFollowing || $isFollowRequested ? 'border-slate-700 bg-slate-900 text-slate-200' : 'theme-btn text-black' }}">
+                        {{ $isFollowing ? 'Following' : ($isFollowRequested ? 'Requested' : 'Follow') }}
                     </button>
                 @endif
             </div>
@@ -172,7 +164,7 @@
             </div>
         </article>
     @empty
-        <div class="theme-card rounded-[28px] border border-slate-800/80 p-10 text-center shadow-xl">
+        <div class="theme-card rounded-lg border border-slate-800/80 p-10 text-center shadow-xl">
             <p class="text-3xl">📸</p>
             <h3 class="mt-4 text-lg font-black text-white">No posts available</h3>
             <p class="mt-2 text-sm text-slate-400">Start following creators or check back later.</p>

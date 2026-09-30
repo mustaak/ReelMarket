@@ -2,18 +2,48 @@
      class="h-[calc(100dvh-4rem)] w-full snap-y snap-mandatory overflow-y-scroll scroll-smooth bg-black md:h-[calc(100dvh-4.5rem)]"
      style="scrollbar-width: none;">
 
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+        <a href="<?php echo e(route('reels.create')); ?>" aria-label="Create reel" title="Create reel" class="theme-btn fixed right-4 top-20 z-40 flex size-11 items-center justify-center rounded-full shadow-lg md:right-8 md:top-24">
+            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-plus'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+        </a>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $reels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
         <?php
             $videoUrl = $reel->video_path ? asset('storage/' . $reel->video_path) : null;
             $posterUrl = $reel->thumbnail ? asset('storage/' . $reel->thumbnail) : null;
             $avatar = $reel->user->profile?->profile_picture;
             $liked = in_array($reel->id, $likedReelIds);
-            $following = in_array($reel->user_id, $followingIds);
+            $followStatus = $followStatuses[$reel->user_id] ?? null;
+            $following = $followStatus === 'accepted';
+            $followRequested = $followStatus === 'pending';
             $onSale = $reel->product && (float) $reel->product->sale_price > 0 && (float) $reel->product->sale_price < (float) $reel->product->price;
             $money = fn ($v) => '₹' . number_format($v, 0);
         ?>
 
         <section <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'reel-'.e($reel->id).''; ?>wire:key="reel-<?php echo e($reel->id); ?>"
+                 id="reel-<?php echo e($reel->id); ?>"
                  data-reel="<?php echo e($reel->id); ?>"
                  class="relative flex h-full w-full snap-start snap-always items-center justify-center">
 
@@ -56,19 +86,21 @@
 
                 <!-- Top: creator + follow -->
                 <div class="pointer-events-auto absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] flex items-center gap-2">
-                    <span class="theme-soft-bg flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/25">
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($avatar): ?>
-                            <img src="<?php echo e(asset('storage/' . $avatar)); ?>" alt="" class="size-full object-cover">
-                        <?php else: ?>
-                            <span class="theme-text text-sm font-black"><?php echo e(strtoupper(substr($reel->user->name, 0, 1))); ?></span>
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    </span>
-                    <span class="min-w-0 flex-1 truncate text-sm font-bold text-white drop-shadow"><?php echo e($reel->user->name); ?></span>
+                    <a href="<?php echo e(route('users.show', $reel->user)); ?>" class="flex min-w-0 flex-1 items-center gap-2">
+                        <span class="theme-soft-bg flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/25">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($avatar): ?>
+                                <img src="<?php echo e(asset('storage/' . $avatar)); ?>" alt="" class="size-full object-cover">
+                            <?php else: ?>
+                                <span class="theme-text text-sm font-black"><?php echo e(strtoupper(substr($reel->user->name, 0, 1))); ?></span>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </span>
+                        <span class="min-w-0 truncate text-sm font-bold text-white drop-shadow"><?php echo e($reel->user->name); ?></span>
+                    </a>
 
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->id() !== $reel->user_id): ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->check() && auth()->id() !== $reel->user_id): ?>
                         <button type="button" wire:click="toggleFollow(<?php echo e($reel->user_id); ?>)"
-                                class="<?php echo e($following ? 'border border-white/50 text-white' : 'theme-btn'); ?> shrink-0 rounded-full px-3 py-1 text-[11px] font-extrabold">
-                            <?php echo e($following ? 'Following' : 'Follow'); ?>
+                                class="<?php echo e($following || $followRequested ? 'border border-white/50 text-white' : 'theme-btn'); ?> shrink-0 rounded-full px-3 py-1 text-[11px] font-extrabold">
+                            <?php echo e($following ? 'Following' : ($followRequested ? 'Requested' : 'Follow')); ?>
 
                         </button>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>

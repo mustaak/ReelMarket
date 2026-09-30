@@ -11,8 +11,9 @@ class FollowObserver
      */
     public function created(Follow $follow): void
     {
-        $follow->following->profile()->increment('followers_count');
-        $follow->follower->profile()->increment('following_count');
+        if ($follow->status === 'accepted') {
+            $this->changeCounts($follow, 1);
+        }
     }
 
     /**
@@ -20,7 +21,9 @@ class FollowObserver
      */
     public function updated(Follow $follow): void
     {
-        //
+        if ($follow->wasChanged('status') && $follow->status === 'accepted') {
+            $this->changeCounts($follow, 1);
+        }
     }
 
     /**
@@ -28,8 +31,9 @@ class FollowObserver
      */
     public function deleted(Follow $follow): void
     {
-        $follow->following->profile()->decrement('followers_count');
-        $follow->follower->profile()->decrement('following_count');
+        if ($follow->status === 'accepted') {
+            $this->changeCounts($follow, -1);
+        }
     }
 
     /**
@@ -46,5 +50,21 @@ class FollowObserver
     public function forceDeleted(Follow $follow): void
     {
         //
+    }
+
+    private function changeCounts(Follow $follow, int $amount): void
+    {
+        $followingProfile = $follow->following->profile()->firstOrCreate([]);
+        $followerProfile = $follow->follower->profile()->firstOrCreate([]);
+
+        if ($amount > 0) {
+            $followingProfile->increment('followers_count', $amount);
+            $followerProfile->increment('following_count', $amount);
+
+            return;
+        }
+
+        $followingProfile->decrement('followers_count', abs($amount));
+        $followerProfile->decrement('following_count', abs($amount));
     }
 }

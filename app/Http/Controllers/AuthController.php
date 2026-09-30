@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Follow;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -83,17 +83,73 @@ class AuthController extends Controller
             'is_public' => true,
         ]);
 
-        $postsCount = $user->posts()->count();
-        $followersCount = $user->followers()->count();
-        $followingCount = $user->following()->count();
+        $profileTab = request()->query('tab') === 'reels' ? 'reels' : 'posts';
+        $postsQuery = $user->posts()
+            ->visibleTo($user)
+            ->with(['images', 'product.images'])
+            ->latest();
+        $reelsQuery = $user->reels()
+            ->visibleTo($user)
+            ->with('product')
+            ->latest();
+        $posts = $profileTab === 'posts' ? $postsQuery->paginate(12) : collect();
+        $reels = $profileTab === 'reels' ? $reelsQuery->paginate(12) : collect();
+        $postsCount = $user->posts()->visibleTo($user)->count();
+        $reelsCount = $user->reels()->visibleTo($user)->count();
+        $followersCount = $user->followers()->wherePivot('status', 'accepted')->count();
+        $followingCount = $user->following()->wherePivot('status', 'accepted')->count();
+        $pendingFollowRequests = Follow::query()
+            ->where('following_id', $user->id)
+            ->where('status', 'pending')
+            ->with('follower.profile')
+            ->latest()
+            ->get();
+
+
+        //dd($posts);
 
         return view('profile', [
             'user' => $user,
             'profile' => $profile,
+            'posts' => $posts,
+            'reels' => $reels,
+            'profileTab' => $profileTab,
             'postsCount' => $postsCount,
+            'reelsCount' => $reelsCount,
             'followersCount' => $followersCount,
             'followingCount' => $followingCount,
+            'isOwnProfile' => true,
+            'isPrivateProfile' => ! (bool) $profile->is_public,
+            'followStatus' => null,
+            'pendingFollowRequests' => $pendingFollowRequests,
         ]);
+    }
+
+    public function updateProfilePrivacy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'is_private' => ['sometimes', 'boolean'],
+        ]);
+
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return redirect()->route('login');
+        }
+
+        $profile = $user->profile()->firstOrCreate([
+            'user_id' => $user->id,
+        ], [
+            'is_public' => true,
+        ]);
+
+        $isPrivate = (bool) ($validated['is_private'] ?? false);
+        $profile->update(['is_public' => ! $isPrivate]);
+
+        return redirect()->route('profile')->with(
+            'success',
+            $isPrivate ? 'Your account is now private.' : 'Your account is now public.',
+        );
     }
 
     public function createPost()

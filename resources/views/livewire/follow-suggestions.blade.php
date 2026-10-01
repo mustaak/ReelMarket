@@ -8,13 +8,41 @@
         @forelse($suggestions as $suggestion)
             @php $followStatus = $followStatuses[$suggestion->id] ?? null; @endphp
             <li wire:key="suggested-user-{{ $suggestion->id }}" class="flex items-center gap-2.5 py-3 first:pt-1">
-                <a href="{{ route('users.show', $suggestion) }}" class="theme-soft-bg theme-text flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-black">
-                    @if($suggestion->profile?->profile_picture)
-                        <img src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}" alt="" class="size-full object-cover">
-                    @else
-                        {{ strtoupper(substr($suggestion->name, 0, 1)) }}
-                    @endif
-                </a>
+                @if ($suggestion->activeStories->isNotEmpty())
+                    <button
+                        type="button"
+                        wire:click="$dispatch('open-story', { storyId: {{ $suggestion->activeStories->first()->id }} })"
+                        class="relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
+                        aria-label="View {{ $suggestion->name }}'s story"
+                    >
+                        <div class="theme-soft-bg theme-text flex size-full items-center justify-center overflow-hidden rounded-full text-sm font-black">
+                            @if($suggestion->profile?->profile_picture)
+                                <img
+                                    src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
+                                    alt="{{ $suggestion->name }}"
+                                    class="size-full object-cover"
+                                >
+                            @else
+                                {{ strtoupper(substr($suggestion->name, 0, 1)) }}
+                            @endif
+                        </div>
+                    </button>
+                @else
+                    <a
+                        href="{{ route('users.show', $suggestion) }}"
+                        class="theme-soft-bg theme-text flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-black"
+                    >
+                        @if($suggestion->profile?->profile_picture)
+                            <img
+                                src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
+                                alt="{{ $suggestion->name }}"
+                                class="size-full object-cover"
+                            >
+                        @else
+                            {{ strtoupper(substr($suggestion->name, 0, 1)) }}
+                        @endif
+                    </a>
+                @endif
 
                 <div class="min-w-0 flex-1">
                     <a href="{{ route('users.show', $suggestion) }}" class="block truncate text-xs font-bold text-white hover:text-(--accent-text)">{{ $suggestion->profile?->username ?? $suggestion->name }}</a>

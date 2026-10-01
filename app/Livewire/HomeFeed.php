@@ -176,15 +176,19 @@ class HomeFeed extends Component
         $storyUsers = collect();
 
         if ($currentUser) {
-            $storyUsers = User::with('profile')
-                ->whereHas('followers', function ($query) use ($currentUser) {
-                    $query->where('follower_id', $currentUser->id)
-                        ->where('follows.status', 'accepted');
-                })
-                ->where('status', true)
-                ->withoutRole(['Admin', 'Super Admin'])
-                ->take(10)
-                ->get();
+            $storyUsers = User::with([
+                'profile',
+                'activeStories',
+            ])
+            ->whereHas('followers', function ($query) use ($currentUser) {
+                $query->where('follower_id', $currentUser->id)
+                    ->where('follows.status', 'accepted');
+            })
+            ->whereHas('activeStories')
+            ->where('status', true)
+            ->withoutRole(['Admin', 'Super Admin'])
+            ->take(10)
+            ->get();
         }
 
         $posts = Post::with([

@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Story;
+use App\Models\StoryView;
 
 #[Fillable(['name', 'email', 'password', 'status', 'type'])]
 #[Hidden(['password', 'remember_token'])]
@@ -35,6 +37,22 @@ class User extends Authenticatable
             'status' => 'boolean',
             'type' => 'string',
         ];
+    }
+
+    public function stories(): HasMany
+    {
+        return $this->hasMany(Story::class);
+    }
+
+    public function activeStories(): HasMany
+    {
+        return $this->hasMany(Story::class)
+            ->where('expires_at', '>', now());
+    }
+
+    public function storyViews(): HasMany
+    {
+        return $this->hasMany(StoryView::class);
     }
 
     public function isSuperAdmin(): bool

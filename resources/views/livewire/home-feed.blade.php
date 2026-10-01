@@ -9,6 +9,7 @@
                 Shop
             </a>
             @auth
+            
                 <a href="{{ route('saved.index') }}" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">Saved</a>
                 <a href="{{ route('posts.create') }}" class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
                     <x-heroicon-o-plus class="size-4" />
@@ -30,7 +31,11 @@
             </div>
 
             <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+                <div class="shrink-0">
+                    <livewire:story.create-story />
+                </div>
                 @foreach($storyUsers as $sUser)
+                <?php /*
                     <a href="{{ route('users.show', $sUser) }}" wire:key="story-user-{{ $sUser->id }}" class="flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center">
                         <div class="relative size-16 rounded-full p-[2px] theme-btn shadow-lg shadow-black/30">
                             <div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950">
@@ -46,7 +51,31 @@
                         <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
                             {{ Str::before($sUser->name, ' ') }}
                         </span>
-                    </a>
+                    </a> */ ?>
+
+                    <button
+                        type="button"
+                        wire:key="story-user-{{ $sUser->id }}"
+                        wire:click="$dispatch('open-story', { storyId: {{ $sUser->activeStories->first()->id }} })"
+                        class="cursor-pointer flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center"
+                    >
+                        <div class="relative size-16 rounded-full p-[2px] theme-btn shadow-lg shadow-black/30">
+                            <div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950">
+                                @if(optional($sUser->profile)->profile_picture)
+                                    <img src="{{ asset('storage/' . $sUser->profile->profile_picture) }}" alt="{{ $sUser->name }}" class="h-full w-full object-cover" />
+                                @else
+                                    <span class="text-sm font-black uppercase text-black">
+                                        {{ Str::substr($sUser->name, 0, 1) }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
+                            {{ Str::before($sUser->name, ' ') }}
+                        </span>
+                    </button>
+
+                    
                 @endforeach
             </div>
         </section>
@@ -236,4 +265,5 @@
     @endif
 
     <livewire:report-content />
+    <livewire:story.story-viewer />
 </div>

@@ -9,6 +9,7 @@
                 Shop
             </a>
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+            
                 <a href="<?php echo e(route('saved.index')); ?>" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">Saved</a>
                 <a href="<?php echo e(route('posts.create')); ?>" class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
                     <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
@@ -51,8 +52,59 @@
             </div>
 
             <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+                <div class="shrink-0">
+                    <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('story.create-story', []);
+
+$__keyOuter = $__key ?? null;
+
+$__key = null;
+$__componentSlots = [];
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-0', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+$__key = $__keyOuter;
+unset($__keyOuter);
+unset($__name);
+unset($__params);
+unset($__componentSlots);
+unset($__split);
+?>
+                </div>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $storyUsers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sUser): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                    <a href="<?php echo e(route('users.show', $sUser)); ?>" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?>wire:key="story-user-<?php echo e($sUser->id); ?>" class="flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center">
+                <?php /*
+                    <a href="{{ route('users.show', $sUser) }}" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?>wire:key="story-user-{{ $sUser->id }}" class="flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center">
+                        <div class="relative size-16 rounded-full p-[2px] theme-btn shadow-lg shadow-black/30">
+                            <div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>@if(optional($sUser->profile)->profile_picture)
+                                    <img src="{{ asset('storage/' . $sUser->profile->profile_picture) }}" alt="{{ $sUser->name }}" class="h-full w-full object-cover" />
+                                @else
+                                    <span class="text-sm font-black uppercase text-black">
+                                        {{ Str::substr($sUser->name, 0, 1) }}
+                                    </span>
+                                @endif<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                        </div>
+                        <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
+                            {{ Str::before($sUser->name, ' ') }}
+                        </span>
+                    </a> */ ?>
+
+                    <button
+                        type="button"
+                        <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?>wire:key="story-user-<?php echo e($sUser->id); ?>"
+                        wire:click="$dispatch('open-story', { storyId: <?php echo e($sUser->activeStories->first()->id); ?> })"
+                        class="cursor-pointer flex min-w-[72px] shrink-0 cursor-pointer flex-col items-center gap-2 text-center"
+                    >
                         <div class="relative size-16 rounded-full p-[2px] theme-btn shadow-lg shadow-black/30">
                             <div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950">
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(optional($sUser->profile)->profile_picture): ?>
@@ -69,7 +121,9 @@
                             <?php echo e(Str::before($sUser->name, ' ')); ?>
 
                         </span>
-                    </a>
+                    </button>
+
+                    
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
             </div>
         </section>
@@ -91,14 +145,40 @@
         <article id="post-<?php echo e($post->id); ?>" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'post-card-'.e($post->id).''; ?>wire:key="post-card-<?php echo e($post->id); ?>" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
             <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
                 <a href="<?php echo e(route('users.show', $author)); ?>" class="flex min-w-0 items-center gap-3">
-                    <div class="flex size-11 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
-                            <img src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>" alt="<?php echo e($author?->name); ?>" class="h-full w-full object-cover" />
-                        <?php else: ?>
-                            <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($author?->activeStories?->isNotEmpty()): ?>
+                        <button
+                            type="button"
+                            wire:click="$dispatch('open-story', { storyId: <?php echo e($author->activeStories->first()->id); ?> })"
+                            class="relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
+                            aria-label="View <?php echo e($author?->name); ?>'s story"
+                        >
+                            <div class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black uppercase">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
+                                    <img
+                                        src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
+                                        alt="<?php echo e($author?->name); ?>"
+                                        class="h-full w-full object-cover"
+                                    />
+                                <?php else: ?>
+                                    <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
 
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    </div>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                        </button>
+                    <?php else: ?>
+                        <div class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
+                                <img
+                                    src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
+                                    alt="<?php echo e($author?->name); ?>"
+                                    class="h-full w-full object-cover"
+                                />
+                            <?php else: ?>
+                                <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
+
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
@@ -472,7 +552,33 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-0', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-1', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+$__key = $__keyOuter;
+unset($__keyOuter);
+unset($__name);
+unset($__params);
+unset($__componentSlots);
+unset($__split);
+?>
+    <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('story.story-viewer', []);
+
+$__keyOuter = $__key ?? null;
+
+$__key = null;
+$__componentSlots = [];
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-2', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 

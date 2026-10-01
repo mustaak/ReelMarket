@@ -33,7 +33,10 @@ class FollowSuggestions extends Component
         $viewer = auth()->user();
 
         $suggestions = User::query()
-            ->with('profile')
+            ->with([
+                'profile',
+                'activeStories',
+            ])
             ->withCount([
                 'followers as accepted_followers_count' => fn (Builder $query) => $query
                     ->where('follows.status', 'accepted'),

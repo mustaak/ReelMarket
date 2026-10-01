@@ -1,58 +1,273 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+ReelMarket
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="./public/images/reelmarket-github-banner.png" alt="ReelMarket" width="100%">
 </p>
 
-## About Laravel
+<p align="center">
+  <strong>Ecommerce + Social Platform built with Laravel</strong>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+About ReelMarket
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+ReelMarket is a Laravel-based ecommerce and social platform that combines online shopping with social networking features.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+The platform provides ecommerce functionality such as products, categories, brands, shopping cart, checkout, orders, and payment status management, along with social features such as profiles, posts, follows, likes, comments, notifications, reels, and messaging.
 
-## Learning Laravel
+Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+🛒 Ecommerce
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Product listing and search
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Product categories
 
-## Agentic Development
+Brands
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Product attributes
 
-```bash
-composer require laravel/boost --dev
+Product variants
 
-php artisan boost:install
-```
+Shopping cart
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Checkout
 
-## Contributing
+Coupon / discount support
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Orders
 
-## Code of Conduct
+Order status management
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Payment status management
 
-## Security Vulnerabilities
+Product-related functionality
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+👥 Social Network
 
-## License
+User profiles
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Follow / Unfollow
+
+Follow Back
+
+Posts
+
+Likes
+
+Comments
+
+Notifications
+
+Suggested users
+
+Reels
+
+Social activity
+
+💬 Messaging
+
+Direct conversations
+
+User-to-user messaging
+
+Conversation management
+
+Real-time messaging
+
+Active / online status
+
+🔔 Notifications
+
+Follow notifications
+
+Follow Back notifications
+
+Social activity notifications
+
+Notification read / unread state
+
+🛠️ Admin Panel
+
+User management
+
+Roles and permissions
+
+Categories
+
+Brands
+
+Attributes
+
+Products
+
+Orders
+
+Reports
+
+Social network management
+
+Tech Stack
+
+Technology
+
+Usage
+
+Laravel
+
+Backend framework
+
+PHP
+
+Server-side language
+
+MySQL
+
+Database
+
+Livewire
+
+Reactive UI
+
+Filament
+
+Admin panel
+
+Laravel Reverb
+
+Real-time broadcasting
+
+Laravel Echo
+
+Real-time frontend communication
+
+Tailwind CSS
+
+UI styling
+
+JavaScript
+
+Frontend functionality
+
+Project Structure
+
+ReelMarket/
+├── app/
+│   ├── Filament/
+│   ├── Livewire/
+│   ├── Models/
+│   └── Services/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── public/
+│   └── images/
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+├── routes/
+└── README.md
+
+Installation
+
+1. Clone the repository
+
+git clone https://github.com/mustaak/ReelMarket.git
+cd ReelMarket
+
+2. Install PHP dependencies
+
+composer install
+
+3. Install frontend dependencies
+
+npm install
+
+4. Create environment file
+
+cp .env.example .env
+
+5. Generate application key
+
+php artisan key:generate
+
+6. Configure database
+
+Update the database credentials in your .env file.
+
+Example:
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+7. Run migrations
+
+php artisan migrate
+
+If your project requires seed data:
+
+php artisan db:seed
+
+8. Create storage link
+
+php artisan storage:link
+
+9. Start Laravel development server
+
+php artisan serve
+
+10. Start frontend development server
+
+npm run dev
+
+Development
+
+For local development, run Laravel and the frontend development server separately:
+
+php artisan serve
+
+npm run dev
+
+If using Laravel Reverb for real-time functionality, start the Reverb server according to your local environment configuration.
+
+Testing
+
+Run the Laravel test suite with:
+
+php artisan test
+
+Git Workflow
+
+Create or switch to the development branch:
+
+git switch development
+
+Pull the latest changes:
+
+git pull origin development
+
+After making changes:
+
+git add -A
+git commit -m "Update project"
+git push origin development
+
+To merge development changes into main:
+
+git switch main
+git pull origin main
+git merge development
+git push origin main
+
+Repository
+
+GitHub:
+https://github.com/mustaak/ReelMarket
+
+License
+
+This project is currently maintained as a private development project.

@@ -189,7 +189,7 @@
             <!-- MAIN CONTENT -->
             <main @class([
                 'col-span-1 space-y-6',
-                'md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
+                'order-2 md:order-1 md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
                 'md:col-span-9' => ! request()->routeIs('home'),
             ])>
                 {{ $slot }}
@@ -197,35 +197,9 @@
 
             <!-- RIGHT SIDEBAR (home only) -->
             @if (request()->routeIs('home'))
-                <aside class="hidden lg:col-span-3 lg:block">
-                    <div class="theme-card sticky top-20 space-y-4 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Trending products</h3>
-
-                        @forelse ($trendingProducts ?? [] as $product)
-                            @php $firstImg = $product->images->first()?->image; @endphp
-                            <div wire:key="trending-product-{{ $product->id }}"
-                                 class="theme-inner flex items-center justify-between gap-3 rounded-xl border border-slate-800 p-2">
-                                <div class="flex min-w-0 items-center gap-2.5">
-                                    <div class="theme-soft-bg flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                                        @if ($firstImg)
-                                            <img src="{{ asset('storage/' . $firstImg) }}" alt="{{ $product->name }}" class="size-full object-cover">
-                                        @else
-                                            <span class="theme-text text-xs font-bold">{{ strtoupper(substr($product->name, 0, 2)) }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h4 class="truncate text-xs font-bold text-white">{{ $product->name }}</h4>
-                                        <p class="theme-text text-[11px] font-semibold">₹{{ number_format($product->price, 0) }}</p>
-                                    </div>
-                                </div>
-                                <a href="{{ route('product.detail', $product->slug) }}"
-                                   class="theme-btn shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold">
-                                    View
-                                </a>
-                            </div>
-                        @empty
-                            <p class="py-3 text-center text-xs text-slate-500">No trending products available.</p>
-                        @endforelse
+                <aside class="order-1 col-span-1 md:order-2 md:col-span-9 lg:col-span-3">
+                    <div class="theme-card sticky top-20 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
+                        <livewire:follow-suggestions />
                     </div>
                 </aside>
             @endif

@@ -44,6 +44,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
     public function attributeValues(): BelongsToMany
     {
         return $this->belongsToMany(AttributeValue::class, 'product_attribute_values')
@@ -57,11 +62,22 @@ class Product extends Model
 
     public function getFinalPriceAttribute(): float
     {
-        return (float) ($this->sale_price ?? $this->price);
+        $price = (float) $this->price;
+        $salePrice = (float) $this->sale_price;
+
+        return $salePrice > 0 && $salePrice < $price ? $salePrice : $price;
     }
 
     public function getIsInStockAttribute(): bool
     {
+        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+            return $this->variants->contains(fn (ProductVariant $variant) => $variant->stock_quantity > 0);
+        }
+
+        if ($this->variants()->exists()) {
+            return $this->variants()->where('stock_quantity', '>', 0)->exists();
+        }
+
         return $this->stock_quantity > 0;
     }
 }

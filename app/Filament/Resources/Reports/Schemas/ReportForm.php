@@ -16,25 +16,26 @@ class ReportForm
     {
         return $schema
             ->components([
-                Section::make('Report details')
+                Section::make('What is being reported')
                     ->schema([
                         MorphToSelect::make('reportable')
-                            ->label('Content being reported')
+                            ->label('Reported content')
                             ->types([
-                                MorphToSelect\Type::make(Post::class)
-                                    ->titleColumnName('content'),
-                                MorphToSelect\Type::make(Reel::class)
-                                    ->titleColumnName('caption'),
+                                MorphToSelect\Type::make(Post::class)->titleColumnName('content'),
+                                MorphToSelect\Type::make(Reel::class)->titleColumnName('caption'),
                             ])
                             ->searchable()
                             ->preload()
                             ->required()
                             ->columnSpanFull(),
+
                         Select::make('reported_by')
+                            ->label('Reported by (user)')
                             ->relationship('reportedBy', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
+
                         Select::make('reason')
                             ->options([
                                 'spam' => 'Spam',
@@ -44,7 +45,9 @@ class ReportForm
                                 'other' => 'Other',
                             ])
                             ->required(),
+
                         Textarea::make('description')
+                            ->label("Reporter's message")
                             ->rows(3)
                             ->columnSpanFull(),
                     ])
@@ -60,6 +63,7 @@ class ReportForm
                             ])
                             ->required()
                             ->default('pending'),
+
                         Textarea::make('admin_note')
                             ->label('Internal note')
                             ->rows(2)

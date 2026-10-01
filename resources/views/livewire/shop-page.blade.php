@@ -84,7 +84,7 @@
                         <div class="flex flex-wrap gap-2">
                             @foreach($attributeValues as $attr)
                                 <button wire:click="$toggle('selectedAttributes.{{ $attr->id }}')"
-                                    class="rounded-full border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide transition {{ in_array($attr->id, $selectedAttributes) ? 'border-(--accent-primary) bg-(--accent-primary)/15 text-(--accent-text)' : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white' }}">
+                                    class="rounded-full border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide transition {{ !empty($selectedAttributes[$attr->id]) ? 'border-(--accent-primary) bg-(--accent-primary)/15 text-(--accent-text)' : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:text-white' }}">
                                     {{ $attr->value }}
                                 </button>
                             @endforeach
@@ -100,6 +100,9 @@
                     @foreach($products as $product)
                         @php
                             $firstImg = $product->images->first()?->image;
+                            $startingPrice = $product->variants->isNotEmpty()
+                                ? $product->variants->map(fn ($variant) => (float) ($variant->price ?? $product->final_price))->min()
+                                : (float) $product->final_price;
                         @endphp
 
                         <article class="group theme-card flex h-full flex-col justify-between rounded-[26px] border border-slate-800/80 p-3.5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-slate-700 hover:shadow-2xl">
@@ -150,23 +153,29 @@
                             <div class="mt-4 border-t border-slate-800/80 pt-3">
                                 <div class="flex items-end justify-between gap-3">
                                     <div>
-                                        <p class="text-lg font-black text-white">₹{{ number_format($product->final_price, 0) }}</p>
+                                        <p class="text-lg font-black text-white">{{ $product->variants->isNotEmpty() ? 'From ' : '' }}₹{{ number_format($startingPrice, 0) }}</p>
                                         @if($product->sale_price && $product->sale_price < $product->price)
                                             <p class="text-[10px] text-slate-500 line-through">₹{{ number_format($product->price, 0) }}</p>
                                         @endif
                                     </div>
 
-                                    <button wire:click="add({{ $product->id }})"
-                                        wire:loading.attr="disabled"
-                                        @disabled(!$product->is_in_stock)
-                                        class="theme-btn rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-40">
-                                        <span wire:loading.remove wire:target="add({{ $product->id }})">
-                                            {{ $product->is_in_stock ? 'Add +' : 'Out' }}
-                                        </span>
-                                        <span wire:loading wire:target="add({{ $product->id }})">
-                                            Adding...
-                                        </span>
-                                    </button>
+                                    @if($product->variants->isNotEmpty())
+                                        <a href="{{ route('product.detail', $product->slug ?? $product->id) }}" class="theme-btn rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wide">
+                                            Choose options
+                                        </a>
+                                    @else
+                                        <button wire:click="add({{ $product->id }})"
+                                            wire:loading.attr="disabled"
+                                            @disabled(!$product->is_in_stock)
+                                            class="theme-btn rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-40">
+                                            <span wire:loading.remove wire:target="add({{ $product->id }})">
+                                                {{ $product->is_in_stock ? 'Add +' : 'Out' }}
+                                            </span>
+                                            <span wire:loading wire:target="add({{ $product->id }})">
+                                                Adding...
+                                            </span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </article>

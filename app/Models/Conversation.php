@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
-    protected $fillable = [];
+    protected $fillable = ['direct_pair_key'];
 
     public function users(): BelongsToMany
     {

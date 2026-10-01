@@ -21,7 +21,7 @@ class ReportResource extends BaseResource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Social network';
+    protected static UnitEnum|string|null $navigationGroup = "Social network";
 
     public static function form(Schema $schema): Schema
     {

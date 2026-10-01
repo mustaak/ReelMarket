@@ -11,9 +11,7 @@ class FollowObserver
      */
     public function created(Follow $follow): void
     {
-        if ($follow->status === 'accepted') {
-            $this->changeCounts($follow, 1);
-        }
+        $this->synchronizeCounts($follow);
     }
 
     /**
@@ -21,8 +19,8 @@ class FollowObserver
      */
     public function updated(Follow $follow): void
     {
-        if ($follow->wasChanged('status') && $follow->status === 'accepted') {
-            $this->changeCounts($follow, 1);
+        if ($follow->wasChanged('status')) {
+            $this->synchronizeCounts($follow);
         }
     }
 
@@ -31,9 +29,7 @@ class FollowObserver
      */
     public function deleted(Follow $follow): void
     {
-        if ($follow->status === 'accepted') {
-            $this->changeCounts($follow, -1);
-        }
+        $this->synchronizeCounts($follow);
     }
 
     /**
@@ -52,19 +48,22 @@ class FollowObserver
         //
     }
 
-    private function changeCounts(Follow $follow, int $amount): void
+    private function synchronizeCounts(Follow $follow): void
     {
         $followingProfile = $follow->following->profile()->firstOrCreate([]);
         $followerProfile = $follow->follower->profile()->firstOrCreate([]);
 
-        if ($amount > 0) {
-            $followingProfile->increment('followers_count', $amount);
-            $followerProfile->increment('following_count', $amount);
-
-            return;
-        }
-
-        $followingProfile->decrement('followers_count', abs($amount));
-        $followerProfile->decrement('following_count', abs($amount));
+        $followingProfile->update([
+            'followers_count' => Follow::query()
+                ->where('following_id', $follow->following_id)
+                ->where('status', 'accepted')
+                ->count(),
+        ]);
+        $followerProfile->update([
+            'following_count' => Follow::query()
+                ->where('follower_id', $follow->follower_id)
+                ->whereIn('status', ['accepted', 'pending'])
+                ->count(),
+        ]);
     }
 }

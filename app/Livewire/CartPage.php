@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\CartService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -13,22 +14,25 @@ class CartPage extends Component
     /**
      * Quantity Increment / Decrement
      */
-    public function updateQuantity(CartService $cartService, int $productId, int $change)
+    public function updateQuantity(CartService $cartService, int $productId, int $change, ?int $variantId = null): void
     {
         $product = Product::find($productId);
+        $variant = $variantId
+            ? ProductVariant::query()->where('product_id', $productId)->find($variantId)
+            : null;
 
-        if (! $product) {
-            $cartService->remove($productId);
-            $this->dispatch('cartUpdated');
+        if (! $product || ($variantId && ! $variant)) {
+            $cartService->remove($productId, $variantId);
+            $this->dispatch('cart-updated');
 
             return;
         }
 
-        $currentQty = $cartService->quantities()[$productId] ?? 0;
+        $lineKey = $variant ? CartService::variantLineKey($variant->id) : $productId;
+        $currentQty = $cartService->quantities()[$lineKey] ?? 0;
         $newQty = $currentQty + $change;
 
-        // Service se quantity set karein
-        $message = $cartService->set($product, $newQty);
+        $message = $cartService->set($product, $newQty, $variant);
 
         if ($message) {
             $this->dispatch('notify', ['type' => 'warning', 'message' => $message]);
@@ -36,28 +40,28 @@ class CartPage extends Component
             $this->dispatch('notify', ['type' => 'success', 'message' => 'Cart updated successfully!']);
         }
 
-        $this->dispatch('cartUpdated');
+        $this->dispatch('cart-updated');
     }
 
     /**
      * Item Remove
      */
-    public function removeItem(CartService $cartService, int $productId)
+    public function removeItem(CartService $cartService, int $productId, ?int $variantId = null): void
     {
-        $cartService->remove($productId);
+        $cartService->remove($productId, $variantId);
 
-        $this->dispatch('cartUpdated');
+        $this->dispatch('cart-updated');
         $this->dispatch('notify', ['type' => 'info', 'message' => 'Item removed from cart']);
     }
 
     /**
      * Clear Whole Cart
      */
-    public function clearCart(CartService $cartService)
+    public function clearCart(CartService $cartService): void
     {
         $cartService->clear();
 
-        $this->dispatch('cartUpdated');
+        $this->dispatch('cart-updated');
         $this->dispatch('notify', ['type' => 'info', 'message' => 'Cart cleared']);
     }
 
@@ -71,13 +75,19 @@ class CartPage extends Component
 
         $lowestPriceProducts = Product::query()
             ->where('status', 'active')
-            ->where('stock_quantity', '>', 0)
-            ->whereNotIn('id', $cartItems->pluck('id')->toArray())
+            ->where('visibility', 'visible')
+            ->where(function ($query): void {
+                $query->where('stock_quantity', '>', 0)
+                    ->orWhereHas('variants', fn ($variants) => $variants->where('stock_quantity', '>', 0));
+            })
+            ->whereNotIn('id', $cartItems->pluck('id')->unique())
+            ->with(['images', 'variants'])
             ->orderBy('price', 'asc')
+            ->take(12)
+            ->get()
+            ->filter(fn (Product $product) => $product->is_in_stock)
             ->take(3)
-            ->get();
-
-        // dd($cartItems);
+            ->values();
 
         return view('livewire.cart-page', [
             'cartItems' => $cartItems,

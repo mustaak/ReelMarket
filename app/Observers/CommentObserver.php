@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Comment;
+use App\Models\Reel;
 use App\Models\User;
 use App\Notifications\SocialActivityNotification;
 
@@ -26,12 +27,16 @@ class CommentObserver
         $actor = $comment->user;
 
         if ($recipient instanceof User && $actor instanceof User && ! $recipient->is($actor)) {
-            $contentType = $commentable instanceof \App\Models\Reel ? 'reel' : 'post';
+            $contentType = $commentable instanceof Reel ? 'reel' : 'post';
+            $url = $commentable instanceof Reel
+                ? route('reels.index', ['reel' => $commentable->getKey()])
+                : route('home', ['post' => $commentable->getKey()]).'#post-'.$commentable->getKey();
+
             $recipient->notify(new SocialActivityNotification(
                 $actor,
                 'comment',
                 "commented on your {$contentType}.",
-                route('home'),
+                $url,
             ));
         }
     }

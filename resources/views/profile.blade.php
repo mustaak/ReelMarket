@@ -62,8 +62,26 @@
                             @auth
                                 <form method="POST" action="{{ route('users.follow.toggle', $user) }}">
                                     @csrf
-                                    <button type="submit" class="rounded-lg px-4 py-2 text-xs font-bold transition {{ $followStatus === 'accepted' ? 'border border-slate-700 bg-white/5 text-white hover:bg-white/10' : 'theme-btn' }}">
-                                        {{ $followStatus === 'accepted' ? 'Following' : ($followStatus === 'pending' ? 'Requested' : 'Follow') }}
+                                    @php
+                                        $followLabel = match (true) {
+                                            $followStatus === 'accepted' => 'Following',
+                                            $followStatus === 'pending' => 'Requested',
+                                            $reverseFollowAccepted => 'Follow Back',
+                                            default => 'Follow',
+                                        };
+                                        $followButtonClass = match (true) {
+                                            $followStatus === 'accepted' =>
+                                                'border border-slate-700 bg-white/5 text-white hover:bg-white/10',
+                                            $followStatus === 'pending' =>
+                                                'border border-slate-700 bg-white/5 text-white hover:bg-white/10',
+                                            default => 'theme-btn',
+                                        };
+                                    @endphp
+                                    <button
+                                        type="submit"
+                                        class="rounded-lg px-4 py-2 text-xs font-bold transition {{ $followButtonClass }}"
+                                    >
+                                        {{ $followLabel }}
                                     </button>
                                 </form>
                             @else
@@ -90,11 +108,15 @@
                     </div>
                     <div class="flex flex-col-reverse gap-0.5">
                         <dt class="text-[10px] text-slate-400 sm:text-xs">Followers</dt>
-                        <dd class="text-sm font-bold text-white sm:text-base">{{ number_format($followersCount) }}</dd>
+                        <dd class="text-sm font-bold text-white sm:text-base">
+                            <a href="{{ $isOwnProfile ? route('profile', ['tab' => 'followers']) : route('users.show', ['user' => $user, 'tab' => 'followers']) }}" class="hover:theme-text">{{ number_format($followersCount) }}</a>
+                        </dd>
                     </div>
                     <div class="flex flex-col-reverse gap-0.5">
                         <dt class="text-[10px] text-slate-400 sm:text-xs">Following</dt>
-                        <dd class="text-sm font-bold text-white sm:text-base">{{ number_format($followingCount) }}</dd>
+                        <dd class="text-sm font-bold text-white sm:text-base">
+                            <a href="{{ $isOwnProfile ? route('profile', ['tab' => 'following']) : route('users.show', ['user' => $user, 'tab' => 'following']) }}" class="hover:theme-text">{{ number_format($followingCount) }}</a>
+                        </dd>
                     </div>
                 </dl>
 
@@ -196,6 +218,20 @@
                         Reels
                         <span class="text-[10px] text-slate-500">{{ number_format($reelsCount) }}</span>
                     </a>
+                    <a href="{{ $isOwnProfile ? route('profile', ['tab' => 'followers']) : route('users.show', ['user' => $user, 'tab' => 'followers']) }}" @class([
+                        '-mt-px inline-flex items-center gap-2 border-t px-3 py-3 text-[11px] font-bold uppercase tracking-[0.16em] transition',
+                        'border-white text-white' => $profileTab === 'followers',
+                        'border-transparent text-slate-500 hover:text-slate-200' => $profileTab !== 'followers',
+                    ]) @if($profileTab === 'followers') aria-current="page" @endif>
+                        Followers
+                    </a>
+                    <a href="{{ $isOwnProfile ? route('profile', ['tab' => 'following']) : route('users.show', ['user' => $user, 'tab' => 'following']) }}" @class([
+                        '-mt-px inline-flex items-center gap-2 border-t px-3 py-3 text-[11px] font-bold uppercase tracking-[0.16em] transition',
+                        'border-white text-white' => $profileTab === 'following',
+                        'border-transparent text-slate-500 hover:text-slate-200' => $profileTab !== 'following',
+                    ]) @if($profileTab === 'following') aria-current="page" @endif>
+                        Following
+                    </a>
                 </nav>
 
                 @if($profileTab === 'posts')
@@ -236,7 +272,7 @@
                     @if(method_exists($posts, 'hasPages') && $posts->hasPages())
                         <div class="mt-8">{{ $posts->links() }}</div>
                     @endif
-                @else
+                @elseif($profileTab === 'reels')
                     <div class="grid grid-cols-3 gap-[2px] sm:gap-1 md:gap-7">
                         @forelse($reels as $reel)
                             @php $reelPoster = $reel->thumbnail ? asset('storage/' . $reel->thumbnail) : null; @endphp
@@ -269,6 +305,30 @@
                     @if(method_exists($reels, 'hasPages') && $reels->hasPages())
                         <div class="mt-8">{{ $reels->links() }}</div>
                     @endif
+                @else
+                    <section aria-label="{{ $profileTab === 'followers' ? 'Followers' : 'Following' }}" class="mx-auto max-w-2xl divide-y divide-slate-800/70">
+                        @forelse($connections as $connection)
+                            <a href="{{ route('users.show', $connection) }}" wire:key="connection-{{ $connection->id }}" class="flex items-center gap-3 py-3">
+                                <span class="theme-soft-bg flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold text-white">
+                                    @if($connection->profile?->profile_picture)
+                                        <img src="{{ asset('storage/' . $connection->profile->profile_picture) }}" alt="" class="size-full object-cover">
+                                    @else
+                                        {{ strtoupper(substr($connection->name, 0, 1)) }}
+                                    @endif
+                                </span>
+                                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-white">{{ $connection->name }}</span>
+                                @if($profileTab === 'following' && $connection->pivot?->status === 'pending')
+                                    <span class="shrink-0 text-[10px] font-bold text-amber-300">Requested</span>
+                                @endif
+                                <x-heroicon-o-chevron-right class="size-4 shrink-0 text-slate-500" />
+                            </a>
+                        @empty
+                            <p class="py-12 text-center text-sm text-slate-400">{{ $profileTab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.' }}</p>
+                        @endforelse
+                        @if(method_exists($connections, 'hasPages') && $connections->hasPages())
+                            <div class="pt-5">{{ $connections->links() }}</div>
+                        @endif
+                    </section>
                 @endif
             </section>
         @endif

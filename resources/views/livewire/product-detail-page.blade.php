@@ -14,12 +14,13 @@
     $money = fn ($v) => '₹' . number_format($v, fmod((float) $v, 1) === 0.0 ? 0 : 2);
 
     $groupedAttributes = $product->attributeValues->groupBy(fn ($item) => $item->attribute->name ?? 'Option');
-    $initialSelection = (object) $groupedAttributes->map(fn ($values) => $values->first()->value)->all();
     $metaLine = collect([$product->brand?->name, $product->category?->name])->filter()->implode(' • ');
+    $displayPrice = (float) ($selectedVariant?->price ?? $product->final_price);
+    $stock = (int) ($selectedVariant?->stock_quantity ?? ($variants->isNotEmpty() ? 0 : $product->stock_quantity));
 @endphp
 
 <div class="mx-auto w-full max-w-6xl space-y-6 md:space-y-8">
-    <div x-data="{ active: 0, selected: @js($initialSelection) }"
+    <div x-data="{ active: 0 }"
          class="theme-card overflow-hidden rounded-[32px] border border-slate-800/80 shadow-2xl">
         <div class="grid grid-cols-1 gap-6 p-4 md:p-6 xl:grid-cols-[1.1fr_0.9fr] xl:p-8">
             <section class="space-y-4">
@@ -72,7 +73,7 @@
 
                 <div class="mt-5 space-y-2">
                     <div class="flex flex-wrap items-baseline gap-3">
-                        <span class="text-3xl font-black text-white">{{ $money($product->final_price) }}</span>
+                        <span class="text-3xl font-black text-white">{{ $money($displayPrice) }}</span>
                         @if($onSale)
                             <span class="text-sm text-slate-500 line-through">{{ $money($price) }}</span>
                             <span class="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-300">
@@ -99,53 +100,41 @@
                     <p class="mt-5 text-sm leading-6 text-slate-300">{{ $product->short_description }}</p>
                 @endif
 
-                <div class="mt-6 space-y-5">
-                    @foreach($groupedAttributes as $attrName => $values)
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between gap-3">
+                @if($variants->isNotEmpty())
+                    <div class="mt-6 space-y-2">
+                        <label for="product-variant" class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Options</label>
+                        <select id="product-variant" wire:model.live.number="selectedVariantId" class="w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-3 text-sm text-white focus:border-(--accent-primary) focus:outline-none">
+                            @foreach($variants as $variant)
+                                <option value="{{ $variant->id }}" @disabled($variant->stock_quantity < 1)>
+                                    {{ $variant->label }}{{ $variant->stock_quantity < 1 ? ' (Out of stock)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @if($selectedVariant)
+                            <p class="text-xs text-slate-400">
+                                @foreach($selectedVariant->options as $optionName => $optionValue)
+                                    {{ $optionName }}: {{ $optionValue }}@unless($loop->last) · @endunless
+                                @endforeach
+                            </p>
+                        @endif
+                    </div>
+                @elseif($groupedAttributes->isNotEmpty())
+                    <div class="mt-6 space-y-4">
+                        @foreach($groupedAttributes as $attrName => $values)
+                            <div class="space-y-2">
                                 <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{{ $attrName }}</span>
-                                <span class="text-xs text-slate-500" x-text="selected[@js($attrName)]"></span>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($values as $value)
+                                        <span class="rounded-full border border-slate-800 bg-slate-950/70 px-3 py-2 text-[11px] font-bold text-slate-300">{{ $value->value }}</span>
+                                    @endforeach
+                                </div>
                             </div>
-
-                            @if(strtolower($attrName) === 'color')
-                                <div class="flex flex-wrap items-center gap-2.5">
-                                    @foreach($values as $val)
-                                        @php
-                                            $raw = trim((string) ($val->color_code ?? $val->value));
-                                            $colorCss = (preg_match('/^#[0-9a-fA-F]{3,8}$/', $raw) || ctype_alpha($raw)) ? $raw : null;
-                                        @endphp
-                                        <button type="button"
-                                                @click="selected[@js($attrName)] = @js($val->value)"
-                                                title="{{ $val->value }}"
-                                                aria-label="{{ $attrName }}: {{ $val->value }}"
-                                                @if($colorCss) style="background-color: {{ $colorCss }};" @endif
-                                                :class="selected[@js($attrName)] === @js($val->value)
-                                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-110'
-                                                    : 'opacity-80 hover:opacity-100'"
-                                                class="h-8 w-8 rounded-full border border-slate-700 bg-slate-600 transition-all">
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="flex flex-wrap items-center gap-2">
-                                    @foreach($values as $val)
-                                        <button type="button"
-                                                @click="selected[@js($attrName)] = @js($val->value)"
-                                                :class="selected[@js($attrName)] === @js($val->value)
-                                                    ? 'theme-btn text-black shadow-lg'
-                                                    : 'border border-slate-800 bg-slate-950/70 text-slate-300 hover:text-white'"
-                                                class="rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-wide transition">
-                                            {{ $val->value }}
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @endif
 
                 <div class="mt-6">
-                    <livewire:add-to-cart :product-id="$product->id" />
+                    <livewire:add-to-cart :product-id="$product->id" :variant-id="$selectedVariant?->id" :key="'add-to-cart-'.$product->id.'-'.($selectedVariant?->id ?? 'none')" />
                 </div>
 
                 @if($seenIn > 0)

@@ -54,7 +54,7 @@ class MessagesPage extends Component
     {
         $conversation = $this->findConversationForCurrentUser($conversationId);
 
-        //dd($conversation);
+        // dd($conversation);
 
         $this->activeConversationId = $conversation->id;
         $this->newRecipientId = null;
@@ -84,6 +84,7 @@ class MessagesPage extends Component
         $conversation = $this->findDirectConversation($sender, $recipient);
         if ($conversation) {
             $this->selectConversation($conversation->id);
+
             return;
         }
         $this->activeConversationId = null;
@@ -94,7 +95,7 @@ class MessagesPage extends Component
 
     public function sendMessage(): void
     {
-    
+
         $validated = $this->validate([
             'messageContent' => ['required', 'string', 'max:2000'],
         ]);
@@ -112,12 +113,10 @@ class MessagesPage extends Component
             } else {
                 $recipient = User::query()->findOrFail($this->newRecipientId);
                 $this->authorizeMessage($sender, $recipient);
-                $conversation = $this->findDirectConversation($sender, $recipient);
-
-                if (! $conversation) {
-                    $conversation = Conversation::query()->create();
-                    $conversation->users()->attach([$sender->id, $recipient->id]);
-                }
+                $conversation = Conversation::query()->firstOrCreate([
+                    'direct_pair_key' => $this->directPairKey($sender, $recipient),
+                ]);
+                $conversation->users()->syncWithoutDetaching([$sender->id, $recipient->id]);
             }
 
             $message = $conversation->messages()->create([
@@ -148,8 +147,11 @@ class MessagesPage extends Component
             return;
         }
 
+        $conversation = $this->findConversationForCurrentUser($this->activeConversationId);
+        $this->markAsRead($conversation->id);
+
         $latestMessageId = Message::query()
-            ->where('conversation_id', $this->activeConversationId)
+            ->where('conversation_id', $conversation->id)
             ->max('id');
         $latestMessageId = $latestMessageId === null ? null : (int) $latestMessageId;
 
@@ -171,7 +173,11 @@ class MessagesPage extends Component
             ])
             ->orderByDesc('conversations.updated_at')
             ->orderByDesc('conversations.id')
-            ->get();
+            ->get()
+            ->unique(fn (Conversation $conversation): string => $conversation->direct_pair_key
+                ? 'direct:'.$conversation->direct_pair_key
+                : 'group:'.$conversation->id)
+            ->values();
 
         $activeConversation = null;
         $recipient = null;
@@ -192,8 +198,6 @@ class MessagesPage extends Component
             $recipient = User::query()->with('profile')->findOrFail($this->newRecipientId);
             $this->authorizeMessage($viewer, $recipient);
         }
-
-        
 
         return view('livewire.messages-page', [
             'conversations' => $conversations,
@@ -222,12 +226,16 @@ class MessagesPage extends Component
     private function findDirectConversation(User $sender, User $recipient): ?Conversation
     {
         return Conversation::query()
-            ->whereHas('users', fn (Builder $query) => $query->whereKey($sender->id))
-            ->whereHas('users', fn (Builder $query) => $query->whereKey($recipient->id))
-            ->withCount('users')
-            ->having('users_count', 2)
-            ->orderByDesc('conversations.updated_at')
+            ->where('direct_pair_key', $this->directPairKey($sender, $recipient))
             ->first();
+    }
+
+    private function directPairKey(User $sender, User $recipient): string
+    {
+        $userIds = [$sender->id, $recipient->id];
+        sort($userIds);
+
+        return $userIds[0].':'.$userIds[1];
     }
 
     private function authorizeMessage(User $sender, User $recipient): void

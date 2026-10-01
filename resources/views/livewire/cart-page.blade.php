@@ -19,7 +19,7 @@
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_380px]">
             <div class="space-y-4">
                 @foreach($cartItems as $item)
-                    <div wire:key="cart-item-{{ $item['id'] }}" class="theme-card rounded-[28px] border border-slate-800/80 p-4 shadow-xl sm:p-5">
+                    <div wire:key="cart-item-{{ $item['cart_key'] }}" class="theme-card rounded-[28px] border border-slate-800/80 p-4 shadow-xl sm:p-5">
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div class="flex min-w-0 items-center gap-4">
                                 <a href="{{ route('product.detail', $item['slug'] ?? $item['id']) }}" class="block flex-shrink-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
@@ -30,6 +30,9 @@
                                     <a href="{{ route('product.detail', $item['slug'] ?? $item['id']) }}" class="block truncate text-base font-black text-white hover:text-(--accent-text) transition-colors">
                                         {{ $item['name'] }}
                                     </a>
+                                    @if($item['variant_label'])
+                                        <p class="mt-1 text-xs text-slate-400">{{ $item['variant_label'] }}</p>
+                                    @endif
                                     <p class="mt-1 text-sm text-slate-400">Unit price: <span class="font-semibold text-slate-200">₹{{ number_format((float) $item['unit'], 0) }}</span></p>
                                     <p class="mt-2 text-lg font-black text-white">₹{{ number_format((float) $item['total'], 0) }}</p>
                                 </div>
@@ -37,18 +40,18 @@
 
                             <div class="flex items-center justify-between gap-4 sm:justify-end">
                                 <div class="flex items-center gap-3 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-1.5">
-                                    <button wire:click="updateQuantity({{ $item['id'] }}, -1)" type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-slate-200 transition hover:text-white">
+                                    <button wire:click="updateQuantity({{ $item['id'] }}, -1, {{ $item['variant_id'] ?? 'null' }})" type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-slate-200 transition hover:text-white">
                                         −
                                     </button>
 
                                     <span class="w-8 text-center text-sm font-black text-white">{{ $item['qty'] }}</span>
 
-                                    <button wire:click="updateQuantity({{ $item['id'] }}, 1)" @if($item['qty'] >= $item['max']) disabled @endif type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-slate-200 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                                    <button wire:click="updateQuantity({{ $item['id'] }}, 1, {{ $item['variant_id'] ?? 'null' }})" @if($item['qty'] >= $item['max']) disabled @endif type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-slate-200 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
                                         +
                                     </button>
                                 </div>
 
-                                <button wire:click="removeItem({{ $item['id'] }})" type="button" class="text-sm font-bold text-rose-400 transition hover:underline">
+                                <button wire:click="removeItem({{ $item['id'] }}, {{ $item['variant_id'] ?? 'null' }})" type="button" class="text-sm font-bold text-rose-400 transition hover:underline">
                                     Remove
                                 </button>
                             </div>
@@ -67,6 +70,11 @@
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                             @foreach($lowestPriceProducts as $product)
+                                @php
+                                    $startingPrice = $product->variants->isNotEmpty()
+                                        ? $product->variants->map(fn ($variant) => (float) ($variant->price ?? $product->final_price))->min()
+                                        : (float) $product->final_price;
+                                @endphp
                                 <div wire:key="lowest-{{ $product->id }}" class="theme-inner rounded-2xl border border-slate-800/80 p-3">
                                     <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
                                         @if($product->images->first()?->image)
@@ -79,11 +87,17 @@
                                     </div>
 
                                     <h3 class="mt-3 text-sm font-black text-white line-clamp-2">{{ $product->name }}</h3>
-                                    <p class="mt-1 text-sm font-bold theme-text">₹{{ number_format((float) $product->price, 0) }}</p>
+                                    <p class="mt-1 text-sm font-bold theme-text">{{ $product->variants->isNotEmpty() ? 'From ' : '' }}₹{{ number_format($startingPrice, 0) }}</p>
 
-                                    <button wire:click="updateQuantity({{ $product->id }}, 1)" type="button" class="theme-btn mt-3 w-full rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wide">
-                                        Add to cart
-                                    </button>
+                                    @if($product->variants->isNotEmpty())
+                                        <a href="{{ route('product.detail', $product->slug ?? $product->id) }}" class="theme-btn mt-3 block w-full rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-wide">
+                                            Choose options
+                                        </a>
+                                    @else
+                                        <button wire:click="updateQuantity({{ $product->id }}, 1)" type="button" class="theme-btn mt-3 w-full rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wide">
+                                            Add to cart
+                                        </button>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>

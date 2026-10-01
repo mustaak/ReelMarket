@@ -2,28 +2,32 @@
 
 namespace App\Livewire;
 
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Brand;
 use App\Models\AttributeValue;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Services\CartService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Layout;
-use App\Services\CartService;
-use App\Livewire\CartCount;
-use App\Livewire\CartDrawer;
 
- #[Layout('components.layouts.app')]
+#[Layout('components.layouts.app')]
 class ShopPage extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $selectedCategory = 'All';
+
     public $selectedBrands = [];
+
     public $minPrice = null;
+
     public $maxPrice = null;
+
     public $inStockOnly = false;
+
     public $selectedAttributes = [];
 
     protected $queryString = [
@@ -49,9 +53,10 @@ class ShopPage extends Component
         $this->dispatch('cart-updated')->to(CartCount::class);
         $this->dispatch('open-cart', notice: $notice)->to(CartDrawer::class);
 
-        $this->dispatch('notify', 
-            type: 'success', 
-            message: "{$product->title} successfully added to your cart! 🎉"
+        $this->dispatch(
+            'notify',
+            type: $notice ? 'warning' : 'success',
+            message: $notice ?? "{$product->name} successfully added to your cart!",
         );
     }
 
@@ -63,14 +68,15 @@ class ShopPage extends Component
 
     public function render()
     {
-        $query = Product::active()->with(['images', 'category', 'brand', 'attributeValues']);
+        $query = Product::active()->with(['images', 'category', 'brand', 'attributeValues', 'variants']);
 
         // 1. Search Query
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('short_description', 'like', '%' . $this->search . '%')
-                  ->orWhere('sku', 'like', '%' . $this->search . '%');
+                $q->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('short_description', 'like', '%'.$this->search.'%')
+                    ->orWhere('sku', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', '%'.$this->search.'%'));
             });
         }
 
@@ -78,12 +84,12 @@ class ShopPage extends Component
         if ($this->selectedCategory !== 'All') {
             $query->whereHas('category', function ($q) {
                 $q->where('slug', $this->selectedCategory)
-                  ->orWhere('id', $this->selectedCategory);
+                    ->orWhere('id', $this->selectedCategory);
             });
         }
 
         // 3. Brands Filter (brand_id column)
-        if (!empty($this->selectedBrands)) {
+        if (! empty($this->selectedBrands)) {
             $query->whereIn('brand_id', $this->selectedBrands);
         }
 
@@ -101,17 +107,19 @@ class ShopPage extends Component
         }
 
         // 6. Attribute Filter (Color, Size via Pivot)
-        if (!empty($this->selectedAttributes)) {
-            $query->whereHas('attributeValues', function ($q) {
-                $q->whereIn('attribute_values.id', $this->selectedAttributes);
+        if (! empty($this->selectedAttributes)) {
+            $selectedAttributeIds = array_keys(array_filter($this->selectedAttributes));
+
+            $query->whereHas('attributeValues', function ($q) use ($selectedAttributeIds) {
+                $q->whereIn('attribute_values.id', $selectedAttributeIds);
             });
         }
 
         $products = $query->latest()->paginate(9);
-        
+
         $categories = Category::all();
         $brands = Brand::all();
-        
+
         // Dynamic Attribute Values (Color, Size etc.)
         $attributeValues = AttributeValue::all();
 

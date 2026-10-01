@@ -40,8 +40,8 @@
                 @else
                     <ul class="flex-1 divide-y divide-slate-800/80 overflow-y-auto px-4">
                         @foreach ($items as $line)
-                            <li wire:key="line-{{ $line['id'] }}" class="flex gap-3 py-4">
-                                <a href=""
+                            <li wire:key="line-{{ $line['cart_key'] }}" class="flex gap-3 py-4">
+                                <a href="{{ route('product.detail', $line['slug'] ?? $line['id']) }}"
                                    class="theme-inner size-20 shrink-0 overflow-hidden rounded-lg">
                                     @if ($line['image'])
                                         <img src="{{ asset('storage/' . $line['image']) }}" alt=""
@@ -54,18 +54,21 @@
                                 </a>
 
                                 <div class="flex min-w-0 flex-1 flex-col">
-                                    <a href="" class="truncate text-sm font-bold text-white">
+                                    <a href="{{ route('product.detail', $line['slug'] ?? $line['id']) }}" class="truncate text-sm font-bold text-white">
                                         {{ $line['name'] }}
                                     </a>
+                                    @if($line['variant_label'])
+                                        <span class="mt-1 text-xs text-slate-400">{{ $line['variant_label'] }}</span>
+                                    @endif
                                     <span class="text-xs text-slate-400">{{ $money($line['unit']) }}</span>
 
                                     <div class="mt-auto flex items-center justify-between pt-2">
                                         <div class="theme-inner flex items-center rounded-lg border border-slate-700">
-                                            <button type="button" wire:click="decrement({{ $line['id'] }})"
+                                            <button type="button" wire:click="decrement({{ $line['id'] }}, {{ $line['variant_id'] ?? 'null' }})"
                                                     aria-label="Decrease quantity of {{ $line['name'] }}"
                                                     class="px-2.5 py-1 text-slate-300 hover:text-white">−</button>
                                             <span class="w-7 text-center text-sm font-bold">{{ $line['qty'] }}</span>
-                                            <button type="button" wire:click="increment({{ $line['id'] }})"
+                                            <button type="button" wire:click="increment({{ $line['id'] }}, {{ $line['variant_id'] ?? 'null' }})"
                                                     @disabled($line['qty'] >= $line['max'])
                                                     aria-label="Increase quantity of {{ $line['name'] }}"
                                                     class="px-2.5 py-1 text-slate-300 hover:text-white disabled:opacity-40">+</button>
@@ -74,7 +77,7 @@
                                     </div>
                                 </div>
 
-                                <button type="button" wire:click="remove({{ $line['id'] }})"
+                                <button type="button" wire:click="remove({{ $line['id'] }}, {{ $line['variant_id'] ?? 'null' }})"
                                         aria-label="Remove {{ $line['name'] }} from cart"
                                         class="self-start rounded-lg p-1.5 text-slate-500 hover:bg-white/5 hover:text-white">
                                     <x-heroicon-o-trash class="size-5" />

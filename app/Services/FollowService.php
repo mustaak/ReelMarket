@@ -12,25 +12,41 @@ class FollowService
     {
         abort_if($follower->is($following), 403);
 
+        $followingProfile = $following->profile()->firstOrCreate([]);
+
         $existingFollow = Follow::query()
             ->where('follower_id', $follower->id)
             ->where('following_id', $following->id)
             ->first();
 
+        
+
         if ($existingFollow) {
+            if ($existingFollow->status === 'pending' && $followingProfile->is_public) {
+                $existingFollow->update(['status' => 'accepted']);
+                $follower->notify(new SocialActivityNotification(
+                    $following,
+                    'follow_accepted',
+                    'your follow request was accepted because this account is now public.',
+                    route('users.show', $following),
+                ));
+
+                return $existingFollow;
+            }
+
             $existingFollow->delete();
 
             return null;
         }
 
         $follower->profile()->firstOrCreate([]);
-        $followingProfile = $following->profile()->firstOrCreate([]);
-
         $follow = Follow::create([
             'follower_id' => $follower->id,
             'following_id' => $following->id,
             'status' => $followingProfile->is_public ? 'accepted' : 'pending',
         ]);
+
+        //dd($follow);
 
         $isRequest = $follow->status === 'pending';
         $following->notify(new SocialActivityNotification(
@@ -41,6 +57,30 @@ class FollowService
         ));
 
         return $follow;
+    }
+
+    public function acceptPendingRequestsForPublicProfile(User $user): void
+    {
+        $profile = $user->profile()->firstOrCreate([]);
+
+        if (! $profile->is_public) {
+            return;
+        }
+
+        $pendingRequests = $user->receivedFollows()
+            ->where('status', 'pending')
+            ->with('follower')
+            ->get();
+
+        foreach ($pendingRequests as $follow) {
+            $follow->update(['status' => 'accepted']);
+            $follow->follower->notify(new SocialActivityNotification(
+                $user,
+                'follow_accepted',
+                'your follow request was accepted because this account is now public.',
+                route('users.show', $user),
+            ));
+        }
     }
 
     public function accept(Follow $follow, User $actor): void

@@ -2,23 +2,27 @@
 
 namespace App\Livewire;
 
+use App\Models\Bookmark;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Reel;
-use App\Models\User;
 use App\Models\ReelView;
+use App\Models\User;
+use App\Services\BookmarkService;
 use App\Services\FollowService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
-
 
 #[Layout('components.layouts.app')]
 class ReelsPage extends Component
 {
     /** @var array<int> Reel ids the current user has liked */
     public array $likedReelIds = [];
+
+    /** @var array<int> Reel ids saved by the current user */
+    public array $bookmarkedReelIds = [];
 
     /** @var array<int, string> Follow status indexed by followed user id */
     public array $followStatuses = [];
@@ -33,8 +37,6 @@ class ReelsPage extends Component
     {
         $focusedReelId = request()->integer('reel');
 
-        
-
         if ($focusedReelId > 0) {
             $this->focusedReelId = $focusedReelId;
         }
@@ -44,6 +46,13 @@ class ReelsPage extends Component
                 ->where('user_id', auth()->id())
                 ->where('likeable_type', Reel::class)
                 ->pluck('likeable_id')
+                ->all();
+
+            $this->bookmarkedReelIds = Bookmark::query()
+                ->where('user_id', auth()->id())
+                ->where('bookmarkable_type', Reel::class)
+                ->pluck('bookmarkable_id')
+                ->map(fn ($id) => (int) $id)
                 ->all();
 
             $this->followStatuses = Follow::query()
@@ -61,7 +70,7 @@ class ReelsPage extends Component
             return;
         }
 
-        $reel = Reel::findOrFail($reelId);
+        $reel = Reel::visibleTo(auth()->user())->findOrFail($reelId);
 
         $existing = Like::query()
             ->where('likeable_type', Reel::class)
@@ -81,6 +90,28 @@ class ReelsPage extends Component
             $this->likedReelIds[] = $reelId;
         }
         // Reel::likes_count is kept in sync by LikeObserver
+    }
+
+    public function toggleBookmark(int $reelId, BookmarkService $bookmarkService): void
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            $this->dispatch('notify', type: 'info', message: 'Please log in to save reels.');
+
+            return;
+        }
+
+        $reel = Reel::visibleTo($user)->findOrFail($reelId);
+        $isBookmarked = $bookmarkService->toggle($user, $reel);
+
+        if ($isBookmarked) {
+            $this->bookmarkedReelIds[] = $reel->id;
+
+            return;
+        }
+
+        $this->bookmarkedReelIds = array_values(array_diff($this->bookmarkedReelIds, [$reel->id]));
     }
 
     public function toggleFollow(int $userId, FollowService $followService): void
@@ -113,6 +144,7 @@ class ReelsPage extends Component
 
     public function openComments(int $reelId): void
     {
+        Reel::visibleTo(auth()->user())->findOrFail($reelId);
         $this->activeCommentsReelId = $reelId;
     }
 
@@ -124,18 +156,28 @@ class ReelsPage extends Component
 
     public function postComment(): void
     {
-        if (! auth()->check()) {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
             $this->dispatch('notify', type: 'info', message: 'Please log in to comment.');
 
             return;
         }
 
+        if (! $this->activeCommentsReelId) {
+            $this->addError('newComment', 'Choose a reel before commenting.');
+
+            return;
+        }
+
+        $reel = Reel::visibleTo($user)->findOrFail($this->activeCommentsReelId);
+
         $this->validate(['newComment' => 'required|string|max:500']);
 
         Comment::create([
             'commentable_type' => Reel::class,
-            'commentable_id' => $this->activeCommentsReelId,
-            'user_id' => auth()->id(),
+            'commentable_id' => $reel->id,
+            'user_id' => $user->id,
             'content' => $this->newComment,
         ]);
 
@@ -146,24 +188,27 @@ class ReelsPage extends Component
     #[On('reel-viewed')]
     public function markViewed(int $reelId): void
     {
-        if (! auth()->check()) {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
             return;
         }
 
+        $reel = Reel::visibleTo($user)->findOrFail($reelId);
+
         $view = ReelView::firstOrCreate([
-            'reel_id' => $reelId,
-            'user_id' => auth()->id(),
+            'reel_id' => $reel->id,
+            'user_id' => $user->id,
         ]);
 
         if ($view->wasRecentlyCreated) {
-            Reel::whereKey($reelId)->increment('views_count');
+            $reel->increment('views_count');
         }
     }
 
     public function render()
     {
         $viewer = auth()->user();
-        
 
         $reelsQuery = Reel::query()
             ->visibleTo($viewer instanceof User ? $viewer : null)
@@ -185,6 +230,7 @@ class ReelsPage extends Component
         return view('livewire.reels-page', [
             'reels' => $reels,
             'followStatuses' => $this->followStatuses,
+            'bookmarkedReelIds' => $this->bookmarkedReelIds,
         ]);
     }
 }

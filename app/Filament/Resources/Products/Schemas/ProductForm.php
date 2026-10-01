@@ -7,13 +7,13 @@ use App\Models\Brand;
 use App\Models\Category;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
@@ -161,6 +161,42 @@ class ProductForm
                                 })
                                 ->columns(3)
                                 ->searchable(),
+                        ]),
+
+                    Tab::make('Variants')
+                        ->schema([
+                            Repeater::make('variants')
+                                ->relationship()
+                                ->schema([
+                                    TextInput::make('label')
+                                        ->required()
+                                        ->maxLength(255),
+
+                                    TextInput::make('sku')
+                                        ->required()
+                                        ->maxLength(255),
+
+                                    KeyValue::make('options')
+                                        ->keyLabel('Option')
+                                        ->valueLabel('Value')
+                                        ->required(),
+
+                                    TextInput::make('price')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->prefix('₹')
+                                        ->helperText('Optional — uses the product price when blank'),
+
+                                    TextInput::make('stock_quantity')
+                                        ->required()
+                                        ->integer()
+                                        ->minValue(0)
+                                        ->default(0),
+                                ])
+                                ->columns(2)
+                                ->columnSpanFull()
+                                ->addActionLabel('Add variant')
+                                ->defaultItems(0),
                         ]),
                 ]),
         ]);

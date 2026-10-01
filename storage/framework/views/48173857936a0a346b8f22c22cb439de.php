@@ -380,7 +380,7 @@ unset($__split);
             <!-- MAIN CONTENT -->
             <main class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                 'col-span-1 space-y-6',
-                'md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
+                'order-2 md:order-1 md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
                 'md:col-span-9' => ! request()->routeIs('home'),
             ]); ?>">
                 <?php echo e($slot); ?>
@@ -389,35 +389,34 @@ unset($__split);
 
             <!-- RIGHT SIDEBAR (home only) -->
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('home')): ?>
-                <aside class="hidden lg:col-span-3 lg:block">
-                    <div class="theme-card sticky top-20 space-y-4 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Trending products</h3>
+                <aside class="order-1 col-span-1 md:order-2 md:col-span-9 lg:col-span-3">
+                    <div class="theme-card sticky top-20 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
+                        <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('follow-suggestions', []);
 
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $trendingProducts ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <?php $firstImg = $product->images->first()?->image; ?>
-                            <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'trending-product-'.e($product->id).''; ?>wire:key="trending-product-<?php echo e($product->id); ?>"
-                                 class="theme-inner flex items-center justify-between gap-3 rounded-xl border border-slate-800 p-2">
-                                <div class="flex min-w-0 items-center gap-2.5">
-                                    <div class="theme-soft-bg flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($firstImg): ?>
-                                            <img src="<?php echo e(asset('storage/' . $firstImg)); ?>" alt="<?php echo e($product->name); ?>" class="size-full object-cover">
-                                        <?php else: ?>
-                                            <span class="theme-text text-xs font-bold"><?php echo e(strtoupper(substr($product->name, 0, 2))); ?></span>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <h4 class="truncate text-xs font-bold text-white"><?php echo e($product->name); ?></h4>
-                                        <p class="theme-text text-[11px] font-semibold">₹<?php echo e(number_format($product->price, 0)); ?></p>
-                                    </div>
-                                </div>
-                                <a href="<?php echo e(route('product.detail', $product->slug)); ?>"
-                                   class="theme-btn shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold">
-                                    View
-                                </a>
-                            </div>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                            <p class="py-3 text-center text-xs text-slate-500">No trending products available.</p>
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+$__keyOuter = $__key ?? null;
+
+$__key = null;
+$__componentSlots = [];
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-5', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+$__key = $__keyOuter;
+unset($__keyOuter);
+unset($__name);
+unset($__params);
+unset($__componentSlots);
+unset($__split);
+?>
                     </div>
                 </aside>
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -559,7 +558,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-5', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-6', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -658,7 +657,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-6', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-7', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -720,7 +719,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-7', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-8', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -892,7 +891,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-8', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-9', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 

@@ -2,22 +2,19 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ListAdmins;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
-use App\Filament\Resources\Users\Pages\ListAdmins;
-
 use App\Models\User;
 use BackedEnum;
-use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
-
 
 class UserResource extends BaseResource
 {
@@ -28,7 +25,6 @@ class UserResource extends BaseResource
     protected static ?string $recordTitleAttribute = 'Users';
 
     protected static UnitEnum|string|null $navigationGroup = 'User Management';
-
 
     public static function form(Schema $schema): Schema
     {
@@ -53,7 +49,7 @@ class UserResource extends BaseResource
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
-            //'admins' => ListAdmins::route('/admins'),
+            // 'admins' => ListAdmins::route('/admins'),
         ];
     }
 
@@ -69,14 +65,17 @@ class UserResource extends BaseResource
 
     public static function canEdit($record): bool
     {
-        return auth()->user()?->can('edit_users') ?? false;
+        $user = auth()->user();
+
+        return ($user?->can('edit_users') ?? false)
+            && ($user->isSuperAdmin() || ! $record->hasRole('Super Admin'));
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()?->can('delete_users') ?? false;
+        $user = auth()->user();
+
+        return ($user?->can('delete_users') ?? false)
+            && ($user->isSuperAdmin() || ! $record->hasRole('Super Admin'));
     }
-
-
-
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Follow;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\FollowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,7 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+        $credentials['status'] = true;
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -83,7 +85,11 @@ class AuthController extends Controller
             'is_public' => true,
         ]);
 
-        $profileTab = request()->query('tab') === 'reels' ? 'reels' : 'posts';
+        $profileTab = request()->query('tab');
+
+        if (! in_array($profileTab, ['posts', 'reels', 'followers', 'following'], true)) {
+            $profileTab = 'posts';
+        }
         $postsQuery = $user->posts()
             ->visibleTo($user)
             ->with(['images', 'product.images'])
@@ -94,10 +100,29 @@ class AuthController extends Controller
             ->latest();
         $posts = $profileTab === 'posts' ? $postsQuery->paginate(12) : collect();
         $reels = $profileTab === 'reels' ? $reelsQuery->paginate(12) : collect();
+
+        $connections = match ($profileTab) {
+            'followers' => $user->acceptedFollowers()->with('profile')->orderBy('users.name')->paginate(30),
+            'following' => $user->following()
+                ->wherePivotIn('status', ['accepted', 'pending'])
+                ->with('profile')
+                ->orderBy('users.name')
+                ->paginate(30),
+            default => collect(),
+        };
+
         $postsCount = $user->posts()->visibleTo($user)->count();
+
         $reelsCount = $user->reels()->visibleTo($user)->count();
-        $followersCount = $user->followers()->wherePivot('status', 'accepted')->count();
-        $followingCount = $user->following()->wherePivot('status', 'accepted')->count();
+
+        $followersCount = $user->acceptedFollowers()->count();
+
+        
+
+        $followingCount = $user->sentFollows()
+            ->whereIn('status', ['accepted', 'pending'])
+            ->count();
+
         $pendingFollowRequests = Follow::query()
             ->where('following_id', $user->id)
             ->where('status', 'pending')
@@ -105,14 +130,14 @@ class AuthController extends Controller
             ->latest()
             ->get();
 
-
-        //dd($posts);
+        // dd($posts);
 
         return view('profile', [
             'user' => $user,
             'profile' => $profile,
             'posts' => $posts,
             'reels' => $reels,
+            'connections' => $connections,
             'profileTab' => $profileTab,
             'postsCount' => $postsCount,
             'reelsCount' => $reelsCount,
@@ -125,7 +150,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function updateProfilePrivacy(Request $request): RedirectResponse
+    public function updateProfilePrivacy(Request $request, FollowService $followService): RedirectResponse
     {
         $validated = $request->validate([
             'is_private' => ['sometimes', 'boolean'],
@@ -145,6 +170,10 @@ class AuthController extends Controller
 
         $isPrivate = (bool) ($validated['is_private'] ?? false);
         $profile->update(['is_public' => ! $isPrivate]);
+
+        if (! $isPrivate) {
+            $followService->acceptPendingRequestsForPublicProfile($user);
+        }
 
         return redirect()->route('profile')->with(
             'success',

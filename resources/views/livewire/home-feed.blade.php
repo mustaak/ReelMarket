@@ -9,6 +9,7 @@
                 Shop
             </a>
             @auth
+                <a href="{{ route('saved.index') }}" class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">Saved</a>
                 <a href="{{ route('posts.create') }}" class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
                     <x-heroicon-o-plus class="size-4" />
                     <span>Create post</span>
@@ -59,11 +60,12 @@
             $isFollowing = $followStatus === 'accepted';
             $isFollowRequested = $followStatus === 'pending';
             $isLiked = auth()->check() && in_array($post->id, $likedPostIds, true);
+            $isBookmarked = auth()->check() && in_array($post->id, $bookmarkedPostIds, true);
             $postImage = $post->image ?: ($post->images?->first()?->image_path ?? null);
             $productImage = $post->product?->images?->first()?->image;
         @endphp
 
-        <article wire:key="post-card-{{ $post->id }}" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
+        <article id="post-{{ $post->id }}" wire:key="post-card-{{ $post->id }}" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
             <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
                 <a href="{{ route('users.show', $author) }}" class="flex min-w-0 items-center gap-3">
                     <div class="flex size-11 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
@@ -127,9 +129,25 @@
                         </button>
                     </div>
 
-                    <button type="button" class="text-slate-300 transition hover:text-white">
-                        <x-heroicon-o-bookmark class="size-5" />
-                    </button>
+                    <div class="flex items-center gap-4">
+                        @auth
+                            @if($post->user_id !== auth()->id())
+                                <button type="button" wire:click="$dispatch('open-report', { type: 'post', id: {{ $post->id }} })" aria-label="Report post" class="text-slate-400 transition hover:text-white">
+                                    <x-heroicon-o-flag class="size-5" />
+                                </button>
+                            @endif
+                        @endauth
+                        <button type="button" wire:click="toggleBookmark({{ $post->id }})"
+                                aria-label="{{ $isBookmarked ? 'Remove saved post' : 'Save post' }}"
+                                aria-pressed="{{ $isBookmarked ? 'true' : 'false' }}"
+                                class="transition hover:text-white {{ $isBookmarked ? 'theme-text' : 'text-slate-300' }}">
+                            @if($isBookmarked)
+                                <x-heroicon-s-bookmark class="size-5" />
+                            @else
+                                <x-heroicon-o-bookmark class="size-5" />
+                            @endif
+                        </button>
+                    </div>
                 </div>
 
                 @if($post->content)
@@ -216,4 +234,6 @@
             </div>
         </div>
     @endif
+
+    <livewire:report-content />
 </div>

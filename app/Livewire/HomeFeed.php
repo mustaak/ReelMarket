@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\Bookmark;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\BookmarkService;
 use App\Services\FollowService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -14,6 +16,8 @@ use Livewire\Component;
 class HomeFeed extends Component
 {
     public array $likedPostIds = [];
+
+    public array $bookmarkedPostIds = [];
 
     public array $followStatuses = [];
 
@@ -28,6 +32,13 @@ class HomeFeed extends Component
                 ->where('user_id', auth()->id())
                 ->where('likeable_type', Post::class)
                 ->pluck('likeable_id')
+                ->all();
+
+            $this->bookmarkedPostIds = Bookmark::query()
+                ->where('user_id', auth()->id())
+                ->where('bookmarkable_type', Post::class)
+                ->pluck('bookmarkable_id')
+                ->map(fn ($id) => (int) $id)
                 ->all();
 
             $this->followStatuses = Follow::query()
@@ -61,15 +72,17 @@ class HomeFeed extends Component
         }
     }
 
-    public function toggleLike($postId)
+    public function toggleLike(int $postId): void
     {
         $user = auth()->user();
 
         if (! $user) {
-            return $this->redirectRoute('login');
+            $this->redirectRoute('login');
+
+            return;
         }
 
-        $post = Post::findOrFail($postId);
+        $post = Post::visibleTo($user)->findOrFail($postId);
 
         $existing = Like::query()
             ->where('likeable_type', Post::class)
@@ -90,8 +103,31 @@ class HomeFeed extends Component
         }
     }
 
+    public function toggleBookmark(int $postId, BookmarkService $bookmarkService): void
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            $this->redirectRoute('login');
+
+            return;
+        }
+
+        $post = Post::visibleTo($user)->findOrFail($postId);
+        $isBookmarked = $bookmarkService->toggle($user, $post);
+
+        if ($isBookmarked) {
+            $this->bookmarkedPostIds[] = $post->id;
+
+            return;
+        }
+
+        $this->bookmarkedPostIds = array_values(array_diff($this->bookmarkedPostIds, [$post->id]));
+    }
+
     public function openComments(int $postId): void
     {
+        Post::visibleTo(auth()->user())->findOrFail($postId);
         $this->activeCommentsPostId = $postId;
         $this->newComment = '';
     }
@@ -104,18 +140,28 @@ class HomeFeed extends Component
 
     public function postComment(): void
     {
-        if (! auth()->check()) {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
             $this->dispatch('notify', type: 'info', message: 'Please log in to comment.');
 
             return;
         }
 
+        if (! $this->activeCommentsPostId) {
+            $this->addError('newComment', 'Choose a post before commenting.');
+
+            return;
+        }
+
+        $post = Post::visibleTo($user)->findOrFail($this->activeCommentsPostId);
+
         $this->validate(['newComment' => 'required|string|max:500']);
 
         Comment::create([
             'commentable_type' => Post::class,
-            'commentable_id' => $this->activeCommentsPostId,
-            'user_id' => auth()->id(),
+            'commentable_id' => $post->id,
+            'user_id' => $user->id,
             'content' => $this->newComment,
         ]);
 
@@ -153,18 +199,15 @@ class HomeFeed extends Component
             ->whereHas('user', function ($query) {
                 $query->withoutRole(['Admin', 'Super Admin']);
             })
+            ->when(request()->integer('post') > 0, fn ($query) => $query->whereKey(request()->integer('post')))
             ->latest()
             ->paginate(10);
-
-            
-        
-
-        dd($posts);
 
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,
             'posts' => $posts,
             'followStatuses' => $this->followStatuses,
+            'bookmarkedPostIds' => $this->bookmarkedPostIds,
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -31,8 +32,8 @@ class CheckoutPage extends Component
     public string $country = 'India';
 
     public string $couponCode = '';
+
     public float $discount = 0;
-    
 
     public function mount(CartService $cartService)
     {
@@ -48,25 +49,29 @@ class CheckoutPage extends Component
         }
     }
 
-    public function applyCoupon(CartService $cartService): void
+    public function applyCoupon(CartService $cartService, CheckoutService $checkoutService): void
     {
         $code = strtoupper(trim($this->couponCode));
 
-        $cartItems = $cartService->items();
+        $this->resetErrorBag('couponCode');
+        $this->discount = 0;
 
-        //dd($cartItems);
-
-        if ($code === 'WELCOME10') {
-            $this->discount = round($cartItems->sum('total') * 0.10, 2);
-
-            session()->flash('coupon_success', '10% discount applied successfully.');
+        if ($code === '') {
+            $this->addError('couponCode', 'Enter a coupon code.');
 
             return;
         }
 
-        $this->discount = 0;
+        try {
+            $this->discount = $checkoutService->couponDiscount($code, (float) $cartService->items()->sum('total'));
+        } catch (ValidationException $exception) {
+            $this->addError('couponCode', $exception->errors()['couponCode'][0] ?? 'Invalid coupon code.');
 
-        $this->addError('couponCode', 'Invalid coupon code.');
+            return;
+        }
+
+        $this->couponCode = $code;
+        session()->flash('coupon_success', '10% discount applied successfully.');
     }
 
     public function placeOrder(CheckoutService $checkoutService)
@@ -86,7 +91,7 @@ class CheckoutPage extends Component
             'country' => ['required', 'string', 'max:100'],
         ]);
 
-        $order = $checkoutService->placeOrder($user, $validated);
+        $order = $checkoutService->placeOrder($user, $validated, $this->couponCode);
 
         return $this->redirectRoute('orders.show', ['order' => $order->id]);
     }

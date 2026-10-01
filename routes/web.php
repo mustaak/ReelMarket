@@ -13,6 +13,7 @@ use App\Livewire\MessagesPage;
 use App\Livewire\NotificationsPage;
 use App\Livewire\ProductDetailPage;
 use App\Livewire\ReelsPage;
+use App\Livewire\SavedContentPage;
 use App\Livewire\ShopPage;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/reels/create', CreateReelPage::class)->name('reels.create');
     Route::get('/notifications', NotificationsPage::class)->name('notifications.index');
+    Route::get('/saved', SavedContentPage::class)->name('saved.index');
     Route::get('/messages', MessagesPage::class)->name('messages.index');
     Route::get('/checkout', CheckoutPage::class)->name('checkout.index');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

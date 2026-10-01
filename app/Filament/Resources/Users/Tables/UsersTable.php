@@ -10,13 +10,13 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section as InfoSection;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -31,7 +31,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->where('id', '!=', auth()->id()))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('id', '!=', auth()->id()))
             ->columns([
                 TextColumn::make('id')->sortable(),
 
@@ -39,7 +39,7 @@ class UsersTable
                     ->label('Avatar')
                     ->circular()
                     ->disk('public')
-                    ->defaultImageUrl(fn(User $record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name)),
+                    ->defaultImageUrl(fn (User $record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name)),
 
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable()->sortable(),
@@ -79,12 +79,12 @@ class UsersTable
                                     ->circular()
                                     ->disk('public')
                                     ->extraImgAttributes(['style' => 'width: 90px; height: 90px; border: 3px solid white; margin-top: -60px;'])
-                                    ->defaultImageUrl(fn(User $record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&size=90'),
+                                    ->defaultImageUrl(fn (User $record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&size=90'),
 
                                 TextEntry::make('name')
-                                ->hiddenLabel()
-                                ->weight('bold')
-                                ->extraAttributes(['style' => 'font-size: 18px;']),
+                                    ->hiddenLabel()
+                                    ->weight('bold')
+                                    ->extraAttributes(['style' => 'font-size: 18px;']),
 
                                 TextEntry::make('email')
                                     ->hiddenLabel()
@@ -96,29 +96,29 @@ class UsersTable
                         InfoSection::make()
                             ->schema([
                                 TextEntry::make('posts_count')
-                                    ->state(fn(User $record) => $record->posts()->count())
+                                    ->state(fn (User $record) => $record->posts()->count())
                                     ->label('')
-                                    ->formatStateUsing(fn($state) => $state . "\nPosts")
+                                    ->formatStateUsing(fn ($state) => $state."\nPosts")
                                     ->html()
-                                    ->formatStateUsing(fn($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Posts</span></div>"),
+                                    ->formatStateUsing(fn ($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Posts</span></div>"),
 
                                 TextEntry::make('followers_count')
-                                    ->state(fn(User $record) => $record->followers()->count())
+                                    ->state(fn (User $record) => $record->followers()->count())
                                     ->label('')
                                     ->html()
-                                    ->formatStateUsing(fn($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Followers</span></div>"),
+                                    ->formatStateUsing(fn ($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Followers</span></div>"),
 
                                 TextEntry::make('following_count')
-                                    ->state(fn(User $record) => $record->following()->count())
+                                    ->state(fn (User $record) => $record->following()->count())
                                     ->label('')
                                     ->html()
-                                    ->formatStateUsing(fn($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Following</span></div>"),
+                                    ->formatStateUsing(fn ($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Following</span></div>"),
 
                                 TextEntry::make('reels_count')
-                                    ->state(fn(User $record) => $record->reels()->count())
+                                    ->state(fn (User $record) => $record->reels()->count())
                                     ->label('')
                                     ->html()
-                                    ->formatStateUsing(fn($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Reels</span></div>"),
+                                    ->formatStateUsing(fn ($state) => "<div style='text-align:center'><span style='font-size:18px;font-weight:700'>{$state}</span><br><span style='color:#6b7280;font-size:13px'>Reels</span></div>"),
                             ])
                             ->columns(4),
 
@@ -140,8 +140,8 @@ class UsersTable
                         ->label('Edit profile')
                         ->icon('heroicon-o-user-circle')
                         ->color('warning')
-                        ->modalHeading(fn(User $record) => "Edit profile: {$record->name}")
-                        ->fillForm(fn(User $record): array => [
+                        ->modalHeading(fn (User $record) => "Edit profile: {$record->name}")
+                        ->fillForm(fn (User $record): array => [
                             'bio' => $record->profile?->bio,
                             'profile_picture' => $record->profile?->profile_picture,
                             'cover_photo' => $record->profile?->cover_photo,
@@ -197,11 +197,11 @@ class UsersTable
                     EditAction::make(),
                     DeleteAction::make(),
                     Action::make('toggleStatus')
-                        ->visible(fn () => auth()->user()->can('deactivate_profile'))
-                        ->label(fn(User $record) => $record->status ? 'Deactivate' : 'Activate')
-                        ->icon(fn(User $record) => $record->status ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                        ->color(fn(User $record) => $record->status ? 'danger' : 'success')
-                        ->action(fn(User $record) => $record->update(['status' => ! $record->status]))
+                        ->visible(fn () => auth()->user()?->can('manage_user_status') ?? false)
+                        ->label(fn (User $record) => $record->status ? 'Deactivate' : 'Activate')
+                        ->icon(fn (User $record) => $record->status ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                        ->color(fn (User $record) => $record->status ? 'danger' : 'success')
+                        ->action(fn (User $record) => $record->update(['status' => ! $record->status]))
                         ->requiresConfirmation(),
                 ])
                     ->label('Actions')

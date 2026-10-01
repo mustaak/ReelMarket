@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Collection;
 
 class CartService
@@ -12,24 +13,62 @@ class CartService
     /** Most units of one product allowed in a single order. */
     public const MAX_PER_LINE = 10;
 
-    /** @return array<int, int> product id => quantity */
+    /** @return array<int|string, int> product or variant line key => quantity */
     public function quantities(): array
     {
         $clean = [];
 
-        foreach ((array) session()->get(self::SESSION_KEY, []) as $id => $qty) {
+        foreach ((array) session()->get(self::SESSION_KEY, []) as $key => $qty) {
             if ((int) $qty > 0) {
-                $clean[(int) $id] = (int) $qty;
+                $key = ctype_digit((string) $key) ? (int) $key : (string) $key;
+
+                if (is_int($key) || self::variantIdFromLineKey($key) !== null) {
+                    $clean[$key] = (int) $qty;
+                }
             }
         }
 
         return $clean;
     }
 
+    public static function variantLineKey(int $variantId): string
+    {
+        return 'variant:'.$variantId;
+    }
+
+    public static function variantIdFromLineKey(int|string $lineKey): ?int
+    {
+        $lineKey = (string) $lineKey;
+
+        if (! str_starts_with($lineKey, 'variant:')) {
+            return null;
+        }
+
+        $variantId = substr($lineKey, strlen('variant:'));
+
+        return ctype_digit($variantId) && (int) $variantId > 0 ? (int) $variantId : null;
+    }
+
     /** How many units of this product can be bought right now (0 = not purchasable). */
-    public function limitFor(Product $product): int
+    public function limitFor(Product $product, ?ProductVariant $variant = null): int
     {
         if ($product->status !== 'active' || $product->visibility !== 'visible') {
+            return 0;
+        }
+
+        $hasVariants = $product->relationLoaded('variants')
+            ? $product->variants->isNotEmpty()
+            : $product->variants()->exists();
+
+        if ($variant) {
+            if ((int) $variant->product_id !== (int) $product->id) {
+                return 0;
+            }
+
+            return min(self::MAX_PER_LINE, max(0, $variant->stock_quantity));
+        }
+
+        if ($hasVariants) {
             return 0;
         }
 
@@ -37,26 +76,28 @@ class CartService
     }
 
     /** Adds to the quantity already in the cart. Returns a message if the request was adjusted. */
-    public function add(Product $product, int $qty = 1): ?string
+    public function add(Product $product, int $qty = 1, ?ProductVariant $variant = null): ?string
     {
-        $current = $this->quantities()[$product->id] ?? 0;
+        $lineKey = $variant ? self::variantLineKey($variant->id) : $product->id;
+        $current = $this->quantities()[$lineKey] ?? 0;
 
-        return $this->set($product, $current + max(1, $qty));
+        return $this->set($product, $current + max(1, $qty), $variant);
     }
 
     /** Sets an exact quantity (0 removes the line). Returns a message if it was adjusted. */
-    public function set(Product $product, int $qty): ?string
+    public function set(Product $product, int $qty, ?ProductVariant $variant = null): ?string
     {
-        $limit = $this->limitFor($product);
+        $limit = $this->limitFor($product, $variant);
+        $lineKey = $variant ? self::variantLineKey($variant->id) : $product->id;
 
         if ($limit === 0) {
-            $this->remove($product->id);
+            $this->remove($product->id, $variant?->id);
 
             return 'Sorry, this product is not available right now.';
         }
 
         if ($qty < 1) {
-            $this->remove($product->id);
+            $this->remove($product->id, $variant?->id);
 
             return null;
         }
@@ -65,22 +106,24 @@ class CartService
 
         if ($qty > $limit) {
             $qty = $limit;
-            $message = $product->stock_quantity < self::MAX_PER_LINE
+            $stockQuantity = $variant?->stock_quantity ?? $product->stock_quantity;
+            $message = $stockQuantity < self::MAX_PER_LINE
                 ? "Only {$limit} left in stock."
-                : 'You can order up to ' . self::MAX_PER_LINE . ' of this item at a time.';
+                : 'You can order up to '.self::MAX_PER_LINE.' of this item at a time.';
         }
 
         $cart = $this->quantities();
-        $cart[$product->id] = $qty;
+        $cart[$lineKey] = $qty;
         session()->put(self::SESSION_KEY, $cart);
 
         return $message;
     }
 
-    public function remove(int $productId): void
+    public function remove(int $productId, ?int $variantId = null): void
     {
         $cart = $this->quantities();
-        unset($cart[$productId]);
+        $lineKey = $variantId ? self::variantLineKey($variantId) : $productId;
+        unset($cart[$lineKey]);
         session()->put(self::SESSION_KEY, $cart);
     }
 
@@ -98,34 +141,66 @@ class CartService
             return collect();
         }
 
+        $variantIds = [];
+        $productIds = [];
+
+        foreach (array_keys($quantities) as $lineKey) {
+            $variantId = self::variantIdFromLineKey($lineKey);
+
+            if ($variantId) {
+                $variantIds[] = $variantId;
+            } elseif (is_int($lineKey)) {
+                $productIds[] = $lineKey;
+            }
+        }
+
+        $variants = ProductVariant::query()
+            ->whereKey($variantIds)
+            ->get()
+            ->keyBy('id');
+
+        $productIds = array_merge($productIds, $variants->pluck('product_id')->map(fn ($id) => (int) $id)->all());
+
         $products = Product::query()
-            ->whereIn('id', array_keys($quantities))
+            ->whereIn('id', array_unique($productIds))
             ->where('status', 'active')
             ->where('visibility', 'visible')
-            ->where('stock_quantity', '>', 0)
-            ->with(['images' => fn ($q) => $q->orderBy('sort_order')])
+            ->with(['images' => fn ($q) => $q->orderBy('sort_order'), 'variants'])
             ->get()
             ->keyBy('id');
 
         $healed = [];
         $lines = collect();
 
-        foreach ($quantities as $id => $qty) {
-            $product = $products->get($id);
+        foreach ($quantities as $lineKey => $qty) {
+            $variantId = self::variantIdFromLineKey($lineKey);
+            $variant = $variantId ? $variants->get($variantId) : null;
+            $productId = $variant?->product_id ?? (is_int($lineKey) ? $lineKey : null);
+            $product = $productId ? $products->get($productId) : null;
 
-            if (! $product) {
+            if (! $product || ($variantId && ! $variant)) {
                 continue;
             }
 
-            $limit = $this->limitFor($product);
+            $limit = $this->limitFor($product, $variant);
+
+            if ($limit === 0) {
+                continue;
+            }
+
             $qty = min($qty, $limit);
-            $unit = (float) $product->final_price;
-            $healed[$id] = $qty;
+            $unit = (float) ($variant?->price ?? $product->final_price);
+            $healed[$lineKey] = $qty;
 
             $lines->push([
-                'id' => $id,
+                'id' => $product->id,
+                'variant_id' => $variant?->id,
+                'cart_key' => $lineKey,
                 'slug' => $product->slug,
                 'name' => $product->name,
+                'variant_label' => $variant?->label,
+                'variant_options' => $variant?->options ?? [],
+                'sku' => $variant?->sku ?? $product->sku,
                 'image' => $product->images->first()?->image,
                 'qty' => $qty,
                 'max' => $limit,

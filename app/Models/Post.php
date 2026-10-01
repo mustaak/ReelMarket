@@ -69,4 +69,9 @@ class Post extends Model
     {
         return $this->morphMany(Report::class, 'reportable');
     }
+
+    public function bookmarks(): MorphMany
+    {
+        return $this->morphMany(Bookmark::class, 'bookmarkable');
+    }
 }

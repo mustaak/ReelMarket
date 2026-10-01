@@ -15,9 +15,11 @@ class ProductDetailPage extends Component
     #[Locked]
     public Product $product;
 
+    public ?int $selectedVariantId = null;
+
     public function mount(string $slug): void
     {
-        $this->product = Product::with(['images', 'category', 'brand', 'attributeValues.attribute'])
+        $this->product = Product::with(['images', 'category', 'brand', 'attributeValues.attribute', 'variants'])
             ->where('status', 'active')
             ->where('visibility', 'visible')
             ->where(function ($query) use ($slug) {
@@ -29,6 +31,10 @@ class ProductDetailPage extends Component
                 }
             })
             ->firstOrFail();
+
+        $this->selectedVariantId = $this->product->variants
+            ->first(fn ($variant) => $variant->stock_quantity > 0)?->id
+            ?? $this->product->variants->first()?->id;
     }
 
     public function render()
@@ -61,6 +67,8 @@ class ProductDetailPage extends Component
         return view('livewire.product-detail-page', [
             'relatedProducts' => $relatedProducts,
             'seenIn' => $seenIn,
+            'variants' => $this->product->variants,
+            'selectedVariant' => $this->product->variants->firstWhere('id', $this->selectedVariantId),
         ]);
     }
 }

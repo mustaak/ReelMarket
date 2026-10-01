@@ -35,6 +35,9 @@
                     <li class="flex items-center justify-between gap-4 py-4">
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-semibold text-white">{{ $item->product_name }}</span>
+                            @if($item->variant_label)
+                                <span class="mt-1 block text-xs text-slate-400">{{ $item->variant_label }}</span>
+                            @endif
                             <span class="mt-1 block text-xs text-slate-400">Qty {{ $item->quantity }} × ₹{{ number_format((float) $item->unit_price, 2) }}</span>
                         </span>
                         <span class="shrink-0 text-sm font-semibold text-white">₹{{ number_format((float) $item->line_total, 2) }}</span>
@@ -43,6 +46,9 @@
             </ul>
             <dl class="ml-auto mt-4 max-w-xs space-y-2 text-sm">
                 <div class="flex justify-between text-slate-400"><dt>Subtotal</dt><dd>₹{{ number_format((float) $order->subtotal, 2) }}</dd></div>
+                @if((float) $order->discount_amount > 0)
+                    <div class="flex justify-between text-slate-400"><dt>Coupon {{ $order->coupon_code }}</dt><dd>- ₹{{ number_format((float) $order->discount_amount, 2) }}</dd></div>
+                @endif
                 <div class="flex justify-between text-slate-400"><dt>Delivery</dt><dd>₹{{ number_format((float) $order->shipping_fee, 2) }}</dd></div>
                 <div class="flex justify-between text-slate-400"><dt>Tax</dt><dd>₹{{ number_format((float) $order->tax_amount, 2) }}</dd></div>
                 <div class="flex justify-between border-t border-slate-800 pt-3 font-bold text-white"><dt>Total due on delivery</dt><dd>₹{{ number_format((float) $order->total, 2) }}</dd></div>

@@ -6,6 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserForm
 {
@@ -37,13 +38,33 @@ class UserForm
 
             Toggle::make('status')
                 ->label('Active')
-                ->default(true),
+                ->default(true)
+                ->visible(fn (): bool => auth()->user()?->can('manage_user_status') ?? false),
 
             Select::make('roles')
-                ->relationship('roles', 'name')
+                ->relationship(
+                    name: 'roles',
+                    titleAttribute: 'name',
+                    modifyQueryUsing: fn (Builder $query): Builder => self::assignableRolesQuery($query),
+                )
                 ->multiple()
                 ->preload()
                 ->searchable(),
         ]);
+    }
+
+    public static function assignableRolesQuery(Builder $query): Builder
+    {
+        $user = auth()->user();
+
+        if ($user?->isSuperAdmin()) {
+            return $query;
+        }
+
+        if ($user?->hasRole('Manager')) {
+            return $query->where('name', 'User');
+        }
+
+        return $query->where('name', '!=', 'Super Admin');
     }
 }

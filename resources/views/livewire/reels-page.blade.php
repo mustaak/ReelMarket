@@ -14,6 +14,7 @@
             $posterUrl = $reel->thumbnail ? asset('storage/' . $reel->thumbnail) : null;
             $avatar = $reel->user->profile?->profile_picture;
             $liked = in_array($reel->id, $likedReelIds);
+            $bookmarked = auth()->check() && in_array($reel->id, $bookmarkedReelIds, true);
             $followStatus = $followStatuses[$reel->user_id] ?? null;
             $following = $followStatus === 'accepted';
             $followRequested = $followStatus === 'pending';
@@ -87,6 +88,31 @@
                         </span>
                         <span class="text-xs font-bold drop-shadow">{{ $reel->comments_count }}</span>
                     </button>
+
+                    <button type="button" wire:click="toggleBookmark({{ $reel->id }})"
+                            aria-label="{{ $bookmarked ? 'Remove saved reel' : 'Save reel' }}"
+                            aria-pressed="{{ $bookmarked ? 'true' : 'false' }}"
+                            class="flex flex-col items-center gap-1 {{ $bookmarked ? 'theme-text' : '' }}">
+                        <span class="flex size-11 items-center justify-center rounded-full bg-black/35 backdrop-blur-sm">
+                            @if($bookmarked)
+                                <x-heroicon-s-bookmark class="size-6" />
+                            @else
+                                <x-heroicon-o-bookmark class="size-6" />
+                            @endif
+                        </span>
+                        <span class="text-xs font-bold drop-shadow">Save</span>
+                    </button>
+
+                    @auth
+                        @if(auth()->id() !== $reel->user_id)
+                            <button type="button" wire:click="$dispatch('open-report', { type: 'reel', id: {{ $reel->id }} })" aria-label="Report reel" class="flex flex-col items-center gap-1 text-white">
+                                <span class="flex size-11 items-center justify-center rounded-full bg-black/35 backdrop-blur-sm">
+                                    <x-heroicon-o-flag class="size-6" />
+                                </span>
+                                <span class="text-xs font-bold drop-shadow">Report</span>
+                            </button>
+                        @endif
+                    @endauth
 
                     <button type="button" class="share-btn flex flex-col items-center gap-1" data-url="{{ route('reels.index') }}#reel-{{ $reel->id }}" aria-label="Share">
                         <span class="flex size-11 items-center justify-center rounded-full bg-black/35 backdrop-blur-sm">
@@ -183,6 +209,8 @@
             </div>
         </div>
     @endif
+
+    <livewire:report-content />
 </div>
 
 <script>

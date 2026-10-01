@@ -82,8 +82,8 @@
                 <?php else: ?>
                     <ul class="flex-1 divide-y divide-slate-800/80 overflow-y-auto px-4">
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $line): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <li <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'line-'.e($line['id']).''; ?>wire:key="line-<?php echo e($line['id']); ?>" class="flex gap-3 py-4">
-                                <a href=""
+                            <li <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'line-'.e($line['cart_key']).''; ?>wire:key="line-<?php echo e($line['cart_key']); ?>" class="flex gap-3 py-4">
+                                <a href="<?php echo e(route('product.detail', $line['slug'] ?? $line['id'])); ?>"
                                    class="theme-inner size-20 shrink-0 overflow-hidden rounded-lg">
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($line['image']): ?>
                                         <img src="<?php echo e(asset('storage/' . $line['image'])); ?>" alt=""
@@ -97,19 +97,22 @@
                                 </a>
 
                                 <div class="flex min-w-0 flex-1 flex-col">
-                                    <a href="" class="truncate text-sm font-bold text-white">
+                                    <a href="<?php echo e(route('product.detail', $line['slug'] ?? $line['id'])); ?>" class="truncate text-sm font-bold text-white">
                                         <?php echo e($line['name']); ?>
 
                                     </a>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($line['variant_label']): ?>
+                                        <span class="mt-1 text-xs text-slate-400"><?php echo e($line['variant_label']); ?></span>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     <span class="text-xs text-slate-400"><?php echo e($money($line['unit'])); ?></span>
 
                                     <div class="mt-auto flex items-center justify-between pt-2">
                                         <div class="theme-inner flex items-center rounded-lg border border-slate-700">
-                                            <button type="button" wire:click="decrement(<?php echo e($line['id']); ?>)"
+                                            <button type="button" wire:click="decrement(<?php echo e($line['id']); ?>, <?php echo e($line['variant_id'] ?? 'null'); ?>)"
                                                     aria-label="Decrease quantity of <?php echo e($line['name']); ?>"
                                                     class="px-2.5 py-1 text-slate-300 hover:text-white">−</button>
                                             <span class="w-7 text-center text-sm font-bold"><?php echo e($line['qty']); ?></span>
-                                            <button type="button" wire:click="increment(<?php echo e($line['id']); ?>)"
+                                            <button type="button" wire:click="increment(<?php echo e($line['id']); ?>, <?php echo e($line['variant_id'] ?? 'null'); ?>)"
                                                     <?php if($line['qty'] >= $line['max']): echo 'disabled'; endif; ?>
                                                     aria-label="Increase quantity of <?php echo e($line['name']); ?>"
                                                     class="px-2.5 py-1 text-slate-300 hover:text-white disabled:opacity-40">+</button>
@@ -118,7 +121,7 @@
                                     </div>
                                 </div>
 
-                                <button type="button" wire:click="remove(<?php echo e($line['id']); ?>)"
+                                <button type="button" wire:click="remove(<?php echo e($line['id']); ?>, <?php echo e($line['variant_id'] ?? 'null'); ?>)"
                                         aria-label="Remove <?php echo e($line['name']); ?> from cart"
                                         class="self-start rounded-lg p-1.5 text-slate-500 hover:bg-white/5 hover:text-white">
                                     <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>

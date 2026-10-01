@@ -28,11 +28,15 @@ class LikeObserver
 
         if ($recipient instanceof User && $actor instanceof User && ! $recipient->is($actor)) {
             $contentType = $likeable instanceof Reel ? 'reel' : 'post';
+            $url = $likeable instanceof Reel
+                ? route('reels.index', ['reel' => $likeable->getKey()])
+                : route('home', ['post' => $likeable->getKey()]).'#post-'.$likeable->getKey();
+
             $recipient->notify(new SocialActivityNotification(
                 $actor,
                 'like',
                 "liked your {$contentType}.",
-                route('home'),
+                $url,
             ));
         }
     }

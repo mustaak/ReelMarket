@@ -191,6 +191,8 @@ class HomeFeed extends Component
             ->get();
         }
 
+        //dd($currentUser);
+
         $posts = Post::with([
             'user.profile',
             'user.activeStories',

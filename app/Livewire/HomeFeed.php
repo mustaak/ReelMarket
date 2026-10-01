@@ -193,6 +193,7 @@ class HomeFeed extends Component
 
         $posts = Post::with([
             'user.profile',
+            'user.activeStories',
             'product',
             'likes',
             'images',

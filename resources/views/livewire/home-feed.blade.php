@@ -96,27 +96,64 @@
 
         <article id="post-{{ $post->id }}" wire:key="post-card-{{ $post->id }}" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
             <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
-                <a href="{{ route('users.show', $author) }}" class="flex min-w-0 items-center gap-3">
-                    <div class="flex size-11 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
-                        @if($authorProfile?->profile_picture)
-                            <img src="{{ asset('storage/' . $authorProfile->profile_picture) }}" alt="{{ $author?->name }}" class="h-full w-full object-cover" />
-                        @else
-                            {{ Str::substr($author?->name ?? 'U', 0, 2) }}
-                        @endif
-                    </div>
+                <div class="flex min-w-0 items-center gap-3">
+
+                    @if ($author?->activeStories?->isNotEmpty())
+                        <button
+                            type="button"
+                            wire:click="$dispatch('open-story', { storyId: {{ $author->activeStories->first()->id }} })"
+                            class="relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
+                            aria-label="View {{ $author?->name }}'s story"
+                        >
+                            <div class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-950 text-sm font-black uppercase">
+                                @if($authorProfile?->profile_picture)
+                                    <img
+                                        src="{{ asset('storage/' . $authorProfile->profile_picture) }}"
+                                        alt="{{ $author?->name }}"
+                                        class="h-full w-full object-cover"
+                                    />
+                                @else
+                                    {{ Str::substr($author?->name ?? 'U', 0, 2) }}
+                                @endif
+                            </div>
+                        </button>
+                    @else
+                        <a
+                            href="{{ route('users.show', $author) }}"
+                            class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase"
+                        >
+                            @if($authorProfile?->profile_picture)
+                                <img
+                                    src="{{ asset('storage/' . $authorProfile->profile_picture) }}"
+                                    alt="{{ $author?->name }}"
+                                    class="h-full w-full object-cover"
+                                />
+                            @else
+                                {{ Str::substr($author?->name ?? 'U', 0, 2) }}
+                            @endif
+                        </a>
+                    @endif
 
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
-                            <h3 class="truncate text-sm font-bold text-white">
+                            <a
+                                href="{{ route('users.show', $author) }}"
+                                class="truncate text-sm font-bold text-white"
+                            >
                                 {{ $authorProfile?->username ?? $author?->name }}
-                            </h3>
+                            </a>
+
                             @if($authorProfile?->is_verified)
                                 <x-heroicon-s-check-circle class="size-4 theme-text" />
                             @endif
                         </div>
-                        <p class="text-[11px] text-slate-400">{{ $post->created_at->diffForHumans() }}</p>
+
+                        <p class="text-[11px] text-slate-400">
+                            {{ $post->created_at->diffForHumans() }}
+                        </p>
                     </div>
-                </a>
+
+                </div>
 
                 @if(auth()->check() && auth()->id() !== $post->user_id)
                     <button

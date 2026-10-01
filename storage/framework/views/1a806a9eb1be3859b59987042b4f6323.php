@@ -144,7 +144,8 @@ unset($__split);
 
         <article id="post-<?php echo e($post->id); ?>" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'post-card-'.e($post->id).''; ?>wire:key="post-card-<?php echo e($post->id); ?>" class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
             <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
-                <a href="<?php echo e(route('users.show', $author)); ?>" class="flex min-w-0 items-center gap-3">
+                <div class="flex min-w-0 items-center gap-3">
+
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($author?->activeStories?->isNotEmpty()): ?>
                         <button
                             type="button"
@@ -152,7 +153,7 @@ unset($__split);
                             class="relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
                             aria-label="View <?php echo e($author?->name); ?>'s story"
                         >
-                            <div class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-black uppercase">
+                            <div class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-950 text-sm font-black uppercase">
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
                                     <img
                                         src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
@@ -166,7 +167,10 @@ unset($__split);
                             </div>
                         </button>
                     <?php else: ?>
-                        <div class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
+                        <a
+                            href="<?php echo e(route('users.show', $author)); ?>"
+                            class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase"
+                        >
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
                                 <img
                                     src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
@@ -177,15 +181,19 @@ unset($__split);
                                 <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
 
                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
+                        </a>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
-                            <h3 class="truncate text-sm font-bold text-white">
+                            <a
+                                href="<?php echo e(route('users.show', $author)); ?>"
+                                class="truncate text-sm font-bold text-white"
+                            >
                                 <?php echo e($authorProfile?->username ?? $author?->name); ?>
 
-                            </h3>
+                            </a>
+
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->is_verified): ?>
                                 <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
@@ -211,9 +219,14 @@ unset($__split);
 <?php endif; ?>
                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
-                        <p class="text-[11px] text-slate-400"><?php echo e($post->created_at->diffForHumans()); ?></p>
+
+                        <p class="text-[11px] text-slate-400">
+                            <?php echo e($post->created_at->diffForHumans()); ?>
+
+                        </p>
                     </div>
-                </a>
+
+                </div>
 
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->check() && auth()->id() !== $post->user_id): ?>
                     <button

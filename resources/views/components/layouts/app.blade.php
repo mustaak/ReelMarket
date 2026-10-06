@@ -19,18 +19,12 @@
         'slate'    => ['body' => '#0f172a', 'card' => '#1e293b', 'inner' => '#334155'],
     ][$bgTheme] ?? ['body' => '#0b0813', 'card' => '#140e26', 'inner' => '#1a1333'];
 
-    // Single source of truth for navigation, so the sidebar and the mobile bar can't drift apart
+    // Desktop pill navigation (main pages)
     $navLinks = [
-        ['route' => 'home',        'label' => 'Home',     'icon' => 'heroicon-o-home',                   'active' => 'home'],
-        ['route' => 'shop.index',  'label' => 'Shop',      'icon' => 'heroicon-o-shopping-bag',           'active' => 'shop.*'],
-        ['route' => 'reels.index', 'label' => 'Reels',     'icon' => 'heroicon-o-play-circle',            'active' => 'reels.*'],
-        ['route' => 'cart.index',  'label' => 'Cart',      'icon' => 'heroicon-o-shopping-cart',          'active' => 'cart.*'],
+        ['route' => 'home',        'label' => 'Home',  'icon' => 'heroicon-o-home',         'active' => 'home'],
+        ['route' => 'shop.index',  'label' => 'Shop',  'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
+        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle',  'active' => 'reels.*'],
     ];
-
-    if (auth()->check()) {
-        $navLinks[] = ['route' => 'notifications.index', 'label' => 'Activity', 'icon' => 'heroicon-o-bell', 'active' => 'notifications.*', 'unreadNotifications' => true];
-        $navLinks[] = ['route' => 'messages.index', 'label' => 'Messages', 'icon' => 'heroicon-o-chat-bubble-left-right', 'active' => 'messages.*', 'unreadMessages' => true];
-    }
 @endphp
 
 <!DOCTYPE html>
@@ -56,6 +50,7 @@
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+        [x-cloak] { display: none !important; }
         body { background-color: var(--bg-body) !important; }
         .theme-card { background-color: var(--bg-card) !important; }
         .theme-inner { background-color: var(--bg-inner) !important; }
@@ -64,11 +59,13 @@
         .theme-btn:hover { filter: brightness(1.1); }
         .theme-text { color: var(--accent-text) !important; }
         .theme-border { border-color: var(--accent-primary) !important; }
+        .hdr-icon { transition: border-color .15s, color .15s; }
+        .hdr-icon:hover { border-color: var(--accent-primary); color: var(--accent-text); }
     </style>
 </head>
 <body class="min-h-dvh text-slate-100 antialiased transition-colors duration-300">
 
-    <!-- MOBILE HEADER -->
+    <!-- MOBILE HEADER (unchanged) -->
     <header class="theme-card/95 sticky top-0 z-40 border-b border-slate-800/80 px-4 py-3 backdrop-blur-md md:hidden">
         <div class="flex items-center justify-between">
             <!-- Logo -->
@@ -101,56 +98,114 @@
             </div>
         </div>
     </header>
-    <!-- DESKTOP HEADER -->
-    <header class="theme-card/95 sticky top-0 z-40 hidden border-b border-slate-800/80 backdrop-blur-md md:block">
-        <div class="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3 lg:px-8">
-            <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5">
-                <span class="theme-btn flex size-9 items-center justify-center rounded-xl text-lg font-black">Y</span>
-                <span class="text-xl font-black tracking-wide text-white">YourBrand</span>
-            </a>
 
-            <form action="{{ route('shop.index') }}" method="GET" class="relative w-full max-w-md">
-                <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-                <input type="search" name="q" value="{{ request('q') }}"
-                       placeholder="Search products, brands..."
-                       class="theme-inner w-full rounded-xl border border-slate-800 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-(--accent-primary) focus:outline-none">
-            </form>
+    <!-- DESKTOP HEADER (sidebar links moved here) -->
+    <header class="theme-card sticky top-0 z-40 hidden border-b border-slate-800/80 md:block">
+        <div class="mx-auto max-w-[1600px] px-6 lg:px-8">
 
-            <div class="ml-auto flex shrink-0 items-center gap-2">
-                <button type="button" onclick="Livewire.dispatch('open-cart')"
-                        aria-label="Cart"
-                        class="relative rounded-xl p-2.5 text-slate-300 transition hover:bg-white/5 hover:text-white">
-                    <x-heroicon-o-shopping-cart class="size-6" />
-                    <span class="absolute -right-0.5 -top-0.5"><livewire:cart-count /></span>
-                </button>
+            <!-- Row 1: logo, search, actions -->
+            <div class="flex items-center gap-4 pb-2.5 pt-3.5">
+                <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5">
+                    <span class="theme-btn flex size-9 items-center justify-center rounded-xl text-lg font-black">Y</span>
+                    <span class="text-xl font-black tracking-wide text-white">YourBrand</span>
+                </a>
 
-                @livewire('theme-switcher')
-
-                @auth
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('profile') }}" aria-label="Profile"
-                           class="rounded-xl p-1 transition hover:bg-white/5">
-                            <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
-                                {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
-                            </span>
-                        </a>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
-                                Logout
-                            </button>
-                        </form>
+                <form action="{{ route('shop.index') }}" method="GET" class="flex-1">
+                    <div class="theme-inner flex h-10 w-full items-center gap-2 rounded-2xl border border-slate-800 pl-4 pr-1.5 focus-within:border-(--accent-primary)">
+                        <x-heroicon-o-magnifying-glass class="size-4 shrink-0 text-slate-500" />
+                        <input type="search" name="q" value="{{ request('q') }}"
+                               placeholder="Search products, brands..."
+                               class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-0">
+                        <button type="submit" class="theme-btn rounded-xl px-4 py-1.5 text-xs font-black">Search</button>
                     </div>
-                @else
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('login') }}" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                </form>
+
+                <div class="flex shrink-0 items-center gap-2">
+                    @auth
+                        <!-- Activity -->
+                        <a href="{{ route('notifications.index') }}" aria-label="Activity"
+                           @class([
+                               'hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border',
+                               'theme-border theme-text' => request()->routeIs('notifications.*'),
+                               'border-slate-800 text-slate-300' => ! request()->routeIs('notifications.*'),
+                           ])>
+                            <x-heroicon-o-bell class="size-5" />
+                            <livewire:unread-notification-count />
+                        </a>
+
+                        <!-- Messages -->
+                        <a href="{{ route('messages.index') }}" aria-label="Messages"
+                           @class([
+                               'hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border',
+                               'theme-border theme-text' => request()->routeIs('messages.*'),
+                               'border-slate-800 text-slate-300' => ! request()->routeIs('messages.*'),
+                           ])>
+                            <x-heroicon-o-chat-bubble-left-right class="size-5" />
+                            <livewire:unread-message-count />
+                        </a>
+                    @endauth
+
+                    <!-- Cart -->
+                    <button type="button" onclick="Livewire.dispatch('open-cart')" aria-label="Cart"
+                            class="hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border border-slate-800 text-slate-300">
+                        <x-heroicon-o-shopping-cart class="size-5" />
+                        <span class="absolute -right-1 -top-1"><livewire:cart-count /></span>
+                    </button>
+
+                    @auth
+                        <!-- Profile menu -->
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                            <button type="button" @click="open = !open" aria-label="Account menu" class="relative block">
+                                <span class="theme-soft-bg theme-text theme-border flex size-10 items-center justify-center rounded-full border-[1.5px] text-sm font-black">
+                                    {{ strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1)) }}
+                                </span>
+                                <span class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-[var(--bg-card)] bg-green-500"></span>
+                            </button>
+
+                            <div x-show="open" x-cloak x-transition.origin.top.right
+                                 class="theme-inner absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-slate-700/80 p-1.5 shadow-2xl">
+                                <a href="{{ route('profile') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/5">
+                                    <x-heroicon-o-user class="size-5" /> My profile
+                                </a>
+                                <a href="{{ route('saved.index') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/5">
+                                    <x-heroicon-o-bookmark class="size-5" /> Saved posts
+                                </a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-400 hover:bg-white/5">
+                                        <x-heroicon-o-arrow-right-on-rectangle class="size-5" /> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="rounded-xl border border-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
                             Login
                         </a>
-                        <a href="{{ route('register') }}" class="theme-btn rounded-xl px-3 py-2 text-xs font-black text-slate-950">
+                        <a href="{{ route('register') }}" class="theme-btn rounded-xl px-3.5 py-2.5 text-xs font-black">
                             Sign Up
                         </a>
-                    </div>
-                @endauth
+                    @endauth
+                </div>
+            </div>
+
+            <!-- Row 2: pill navigation + theme switcher -->
+            <div class="flex items-center justify-between pb-3.5 pt-0.5">
+                <nav class="theme-inner inline-flex items-center gap-0.5 rounded-2xl border border-slate-800 p-1">
+                    @foreach ($navLinks as $link)
+                        <a href="{{ route($link['route']) }}"
+                           @class([
+                               'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition',
+                               'theme-btn' => request()->routeIs($link['active']),
+                               'text-slate-400 hover:text-white' => ! request()->routeIs($link['active']),
+                           ])>
+                            <x-dynamic-component :component="$link['icon']" class="size-[18px]" />
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endforeach
+                </nav>
+
+                @livewire('theme-switcher')
             </div>
         </div>
     </header>
@@ -158,55 +213,14 @@
     <div class="mx-auto max-w-[1600px] px-4 pb-24 sm:px-6 md:pb-6 lg:px-8">
         <div class="grid grid-cols-1 gap-6 py-4 md:grid-cols-12 md:py-6">
 
-            <!-- DESKTOP SIDEBAR -->
-            <aside class="hidden md:col-span-3 md:block">
-                <div class="theme-card sticky top-20 space-y-5 rounded-2xl border border-slate-800/80 p-5 shadow-xl transition-colors duration-300">
-                    <nav class="space-y-1">
-                        @foreach ($navLinks as $link)
-                            @php $isActive = request()->routeIs($link['active']); @endphp
-                            <a href="{{ route($link['route']) }}"
-                               @class([
-                                   'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition',
-                                   'theme-soft-bg theme-text font-bold' => $isActive,
-                                   'font-medium text-slate-400 hover:text-white' => ! $isActive,
-                               ])>
-                                <span class="relative flex size-5 shrink-0 items-center justify-center">
-                                    <x-dynamic-component :component="$link['icon']" class="size-5" />
-                                    @if($link['unreadMessages'] ?? false)
-                                        <livewire:unread-message-count />
-                                    @endif
-                                    @if($link['unreadNotifications'] ?? false)
-                                        <livewire:unread-notification-count />
-                                    @endif
-                                </span>
-                                <span>{{ $link['label'] }}</span>
-                            </a>
-                        @endforeach
-                    </nav>
-                </div>
-            </aside>
-
             <!-- MAIN CONTENT -->
-            <main @class([
-                'col-span-1 space-y-6',
-                'order-2 md:order-1 md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
-                'md:col-span-9' => ! request()->routeIs('home'),
-            ])>
+            <main class="col-span-1 space-y-6 md:col-span-12">
                 {{ $slot }}
             </main>
-
-            <!-- RIGHT SIDEBAR (home only) -->
-            @if (request()->routeIs('home'))
-                <aside class="order-1 col-span-1 md:order-2 md:col-span-9 lg:col-span-3">
-                    <div class="theme-card sticky top-20 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                        <livewire:follow-suggestions />
-                    </div>
-                </aside>
-            @endif
         </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAV -->
+    <!-- MOBILE BOTTOM NAV (unchanged) -->
     <nav class="theme-card fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden">
         <div class="mx-auto flex max-w-md items-center">
             <!-- Primary 4 -->

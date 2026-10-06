@@ -93,7 +93,12 @@ class ProductForm
                             TextInput::make('stock_quantity')
                                 ->required()
                                 ->numeric()
-                                ->default(0),
+                                ->integer()
+                                ->minValue(0)
+                                ->default(0)
+                                ->helperText('Used only when this product has no variants.')
+                                ->disabled(fn (callable $get) => filled($get('variants')))
+                                ->dehydrated(),
 
                             TextInput::make('weight')
                                 ->numeric()
@@ -188,10 +193,12 @@ class ProductForm
                                         ->helperText('Optional — uses the product price when blank'),
 
                                     TextInput::make('stock_quantity')
+                                        ->label('Stock Quantity')
                                         ->required()
                                         ->integer()
                                         ->minValue(0)
-                                        ->default(0),
+                                        ->default(0)
+                                        ->helperText('Current available stock for this variant.'),
                                 ])
                                 ->columns(2)
                                 ->columnSpanFull()

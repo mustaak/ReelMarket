@@ -32,7 +32,7 @@
                     <video src="{{ $videoUrl }}"
                            @if($posterUrl) poster="{{ $posterUrl }}" @endif
                            class="size-full object-cover"
-                           playsinline loop muted preload="metadata"></video>
+                           playsinline loop preload="metadata"></video>
                 @elseif ($posterUrl)
                     <img src="{{ $posterUrl }}" alt="" class="size-full object-cover">
                 @else

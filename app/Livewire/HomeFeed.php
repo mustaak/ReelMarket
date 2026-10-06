@@ -3,10 +3,13 @@
 namespace App\Livewire;
 
 use App\Models\Bookmark;
+use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Post;
+use App\Models\Product;
+use App\Models\Reel;
 use App\Models\User;
 use App\Services\BookmarkService;
 use App\Services\FollowService;
@@ -172,6 +175,7 @@ class HomeFeed extends Component
     public function render()
     {
         $currentUser = auth()->user();
+        $viewer = $currentUser instanceof User ? $currentUser : null;
 
         $storyUsers = collect();
 
@@ -191,8 +195,6 @@ class HomeFeed extends Component
             ->get();
         }
 
-        //dd($currentUser);
-
         $posts = Post::with([
             'user.profile',
             'user.activeStories',
@@ -202,19 +204,61 @@ class HomeFeed extends Component
             'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
             'product.images',
         ])
-            ->visibleTo($currentUser instanceof User ? $currentUser : null)
+            ->visibleTo($viewer)
             ->whereHas('user', function ($query) {
                 $query->withoutRole(['Admin', 'Super Admin']);
             })
-            ->when(request()->integer('post') > 0, fn ($query) => $query->whereKey(request()->integer('post')))
+            ->when(
+                request()->integer('post') > 0,
+                fn ($query) => $query->whereKey(request()->integer('post'))
+            )
             ->latest()
             ->paginate(10);
+
+        // ---- Shop sections for the redesigned home page ----
+
+        $categories = Category::query()
+            ->active()
+            ->rootLevel()
+            ->orderBy('sort_order')
+            ->take(8)
+            ->get();
+
+        // Featured products first, then newest
+        $trendingProducts = Product::query()
+            ->active()
+            ->with(['images', 'variants', 'brand', 'category'])
+            ->orderByDesc('featured')
+            ->latest()
+            ->take(8)
+            ->get();
+
+        // Product with the biggest percentage discount
+        $dealProduct = Product::query()
+            ->active()
+            ->with(['images', 'variants'])
+            ->where('sale_price', '>', 0)
+            ->whereColumn('sale_price', '<', 'price')
+            ->orderByRaw('(price - sale_price) / price DESC')
+            ->first();
+
+        $trendingReels = Reel::query()
+            ->visibleTo($viewer)
+            ->with(['user.profile', 'product'])
+            ->latest()
+            ->take(4)
+            ->get();
 
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,
             'posts' => $posts,
             'followStatuses' => $this->followStatuses,
             'bookmarkedPostIds' => $this->bookmarkedPostIds,
+            'categories' => $categories,
+            'trendingProducts' => $trendingProducts,
+            'dealProduct' => $dealProduct,
+            'dealEndsAtMs' => now()->endOfDay()->timestamp * 1000,
+            'trendingReels' => $trendingReels,
         ]);
     }
 }

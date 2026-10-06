@@ -19,18 +19,12 @@
         'slate'    => ['body' => '#0f172a', 'card' => '#1e293b', 'inner' => '#334155'],
     ][$bgTheme] ?? ['body' => '#0b0813', 'card' => '#140e26', 'inner' => '#1a1333'];
 
-    // Single source of truth for navigation, so the sidebar and the mobile bar can't drift apart
+    // Desktop pill navigation (main pages)
     $navLinks = [
-        ['route' => 'home',        'label' => 'Home',     'icon' => 'heroicon-o-home',                   'active' => 'home'],
-        ['route' => 'shop.index',  'label' => 'Shop',      'icon' => 'heroicon-o-shopping-bag',           'active' => 'shop.*'],
-        ['route' => 'reels.index', 'label' => 'Reels',     'icon' => 'heroicon-o-play-circle',            'active' => 'reels.*'],
-        ['route' => 'cart.index',  'label' => 'Cart',      'icon' => 'heroicon-o-shopping-cart',          'active' => 'cart.*'],
+        ['route' => 'home',        'label' => 'Home',  'icon' => 'heroicon-o-home',         'active' => 'home'],
+        ['route' => 'shop.index',  'label' => 'Shop',  'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
+        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle',  'active' => 'reels.*'],
     ];
-
-    if (auth()->check()) {
-        $navLinks[] = ['route' => 'notifications.index', 'label' => 'Activity', 'icon' => 'heroicon-o-bell', 'active' => 'notifications.*', 'unreadNotifications' => true];
-        $navLinks[] = ['route' => 'messages.index', 'label' => 'Messages', 'icon' => 'heroicon-o-chat-bubble-left-right', 'active' => 'messages.*', 'unreadMessages' => true];
-    }
 ?>
 
 <!DOCTYPE html>
@@ -57,6 +51,7 @@
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+        [x-cloak] { display: none !important; }
         body { background-color: var(--bg-body) !important; }
         .theme-card { background-color: var(--bg-card) !important; }
         .theme-inner { background-color: var(--bg-inner) !important; }
@@ -65,11 +60,13 @@
         .theme-btn:hover { filter: brightness(1.1); }
         .theme-text { color: var(--accent-text) !important; }
         .theme-border { border-color: var(--accent-primary) !important; }
+        .hdr-icon { transition: border-color .15s, color .15s; }
+        .hdr-icon:hover { border-color: var(--accent-primary); color: var(--accent-text); }
     </style>
 </head>
 <body class="min-h-dvh text-slate-100 antialiased transition-colors duration-300">
 
-    <!-- MOBILE HEADER -->
+    <!-- MOBILE HEADER (unchanged) -->
     <header class="theme-card/95 sticky top-0 z-40 border-b border-slate-800/80 px-4 py-3 backdrop-blur-md md:hidden">
         <div class="flex items-center justify-between">
             <!-- Logo -->
@@ -128,16 +125,21 @@ unset($__split);
             </div>
         </div>
     </header>
-    <!-- DESKTOP HEADER -->
-    <header class="theme-card/95 sticky top-0 z-40 hidden border-b border-slate-800/80 backdrop-blur-md md:block">
-        <div class="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3 lg:px-8">
-            <a href="<?php echo e(route('home')); ?>" class="flex shrink-0 items-center gap-2.5">
-                <span class="theme-btn flex size-9 items-center justify-center rounded-xl text-lg font-black">Y</span>
-                <span class="text-xl font-black tracking-wide text-white">YourBrand</span>
-            </a>
 
-            <form action="<?php echo e(route('shop.index')); ?>" method="GET" class="relative w-full max-w-md">
-                <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+    <!-- DESKTOP HEADER (sidebar links moved here) -->
+    <header class="theme-card sticky top-0 z-40 hidden border-b border-slate-800/80 md:block">
+        <div class="mx-auto max-w-[1600px] px-6 lg:px-8">
+
+            <!-- Row 1: logo, search, actions -->
+            <div class="flex items-center gap-4 pb-2.5 pt-3.5">
+                <a href="<?php echo e(route('home')); ?>" class="flex shrink-0 items-center gap-2.5">
+                    <span class="theme-btn flex size-9 items-center justify-center rounded-xl text-lg font-black">Y</span>
+                    <span class="text-xl font-black tracking-wide text-white">YourBrand</span>
+                </a>
+
+                <form action="<?php echo e(route('shop.index')); ?>" method="GET" class="flex-1">
+                    <div class="theme-inner flex h-10 w-full items-center gap-2 rounded-2xl border border-slate-800 pl-4 pr-1.5 focus-within:border-(--accent-primary)">
+                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('heroicon-o-magnifying-glass'); ?>
@@ -146,7 +148,7 @@ unset($__split);
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500']); ?>
+<?php $component->withAttributes(['class' => 'size-4 shrink-0 text-slate-500']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -159,25 +161,32 @@ unset($__split);
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                <input type="search" name="q" value="<?php echo e(request('q')); ?>"
-                       placeholder="Search products, brands..."
-                       class="theme-inner w-full rounded-xl border border-slate-800 py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-(--accent-primary) focus:outline-none">
-            </form>
+                        <input type="search" name="q" value="<?php echo e(request('q')); ?>"
+                               placeholder="Search products, brands..."
+                               class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-0">
+                        <button type="submit" class="theme-btn rounded-xl px-4 py-1.5 text-xs font-black">Search</button>
+                    </div>
+                </form>
 
-            <div class="ml-auto flex shrink-0 items-center gap-2">
-                <button type="button" onclick="Livewire.dispatch('open-cart')"
-                        aria-label="Cart"
-                        class="relative rounded-xl p-2.5 text-slate-300 transition hover:bg-white/5 hover:text-white">
-                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+                <div class="flex shrink-0 items-center gap-2">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+                        <!-- Activity -->
+                        <a href="<?php echo e(route('notifications.index')); ?>" aria-label="Activity"
+                           class="<?php echo \Illuminate\Support\Arr::toCssClasses([
+                               'hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border',
+                               'theme-border theme-text' => request()->routeIs('notifications.*'),
+                               'border-slate-800 text-slate-300' => ! request()->routeIs('notifications.*'),
+                           ]); ?>">
+                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-shopping-cart'); ?>
+<?php $component->withName('heroicon-o-bell'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-6']); ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -190,11 +199,11 @@ unset($__split);
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                    <span class="absolute -right-0.5 -top-0.5"><?php
+                            <?php
 $__split = function ($name, $params = []) {
     return [$name, $params];
 };
-[$__name, $__params] = $__split('cart-count', []);
+[$__name, $__params] = $__split('unread-notification-count', []);
 
 $__keyOuter = $__key ?? null;
 
@@ -215,14 +224,43 @@ unset($__name);
 unset($__params);
 unset($__componentSlots);
 unset($__split);
-?></span>
-                </button>
+?>
+                        </a>
 
-                <?php
+                        <!-- Messages -->
+                        <a href="<?php echo e(route('messages.index')); ?>" aria-label="Messages"
+                           class="<?php echo \Illuminate\Support\Arr::toCssClasses([
+                               'hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border',
+                               'theme-border theme-text' => request()->routeIs('messages.*'),
+                               'border-slate-800 text-slate-300' => ! request()->routeIs('messages.*'),
+                           ]); ?>">
+                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-chat-bubble-left-right'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                            <?php
 $__split = function ($name, $params = []) {
     return [$name, $params];
 };
-[$__name, $__params] = $__split('theme-switcher');
+[$__name, $__params] = $__split('unread-message-count', []);
 
 $__keyOuter = $__key ?? null;
 
@@ -244,81 +282,39 @@ unset($__params);
 unset($__componentSlots);
 unset($__split);
 ?>
-
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
-                    <div class="flex items-center gap-2">
-                        <a href="<?php echo e(route('profile')); ?>" aria-label="Profile"
-                           class="rounded-xl p-1 transition hover:bg-white/5">
-                            <span class="theme-soft-bg theme-text flex size-8 items-center justify-center rounded-full text-sm font-black">
-                                <?php echo e(strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1))); ?>
-
-                            </span>
                         </a>
-                        <form method="POST" action="<?php echo e(route('logout')); ?>">
-                            <?php echo csrf_field(); ?>
-                            <button type="submit" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                <?php else: ?>
-                    <div class="flex items-center gap-2">
-                        <a href="<?php echo e(route('login')); ?>" class="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
-                            Login
-                        </a>
-                        <a href="<?php echo e(route('register')); ?>" class="theme-btn rounded-xl px-3 py-2 text-xs font-black text-slate-950">
-                            Sign Up
-                        </a>
-                    </div>
-                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            </div>
-        </div>
-    </header>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    <div class="mx-auto max-w-[1600px] px-4 pb-24 sm:px-6 md:pb-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-6 py-4 md:grid-cols-12 md:py-6">
-
-            <!-- DESKTOP SIDEBAR -->
-            <aside class="hidden md:col-span-3 md:block">
-                <div class="theme-card sticky top-20 space-y-5 rounded-2xl border border-slate-800/80 p-5 shadow-xl transition-colors duration-300">
-                    <nav class="space-y-1">
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $navLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $link): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <?php $isActive = request()->routeIs($link['active']); ?>
-                            <a href="<?php echo e(route($link['route'])); ?>"
-                               class="<?php echo \Illuminate\Support\Arr::toCssClasses([
-                                   'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition',
-                                   'theme-soft-bg theme-text font-bold' => $isActive,
-                                   'font-medium text-slate-400 hover:text-white' => ! $isActive,
-                               ]); ?>">
-                                <span class="relative flex size-5 shrink-0 items-center justify-center">
-                                    <?php if (isset($component)) { $__componentOriginal511d4862ff04963c3c16115c05a86a9d = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal511d4862ff04963c3c16115c05a86a9d = $attributes; } ?>
-<?php $component = Illuminate\View\DynamicComponent::resolve(['component' => $link['icon']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('dynamic-component'); ?>
+                    <!-- Cart -->
+                    <button type="button" onclick="Livewire.dispatch('open-cart')" aria-label="Cart"
+                            class="hdr-icon theme-inner relative flex size-10 items-center justify-center rounded-xl border border-slate-800 text-slate-300">
+                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-shopping-cart'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\DynamicComponent::ignoredParameterNames()); ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['class' => 'size-5']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
-<?php if (isset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
-<?php $attributes = $__attributesOriginal511d4862ff04963c3c16115c05a86a9d; ?>
-<?php unset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-<?php if (isset($__componentOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
-<?php $component = $__componentOriginal511d4862ff04963c3c16115c05a86a9d; ?>
-<?php unset($__componentOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($link['unreadMessages'] ?? false): ?>
-                                        <?php
+                        <span class="absolute -right-1 -top-1"><?php
 $__split = function ($name, $params = []) {
     return [$name, $params];
 };
-[$__name, $__params] = $__split('unread-message-count', []);
+[$__name, $__params] = $__split('cart-count', []);
 
 $__keyOuter = $__key ?? null;
 
@@ -339,14 +335,152 @@ unset($__name);
 unset($__params);
 unset($__componentSlots);
 unset($__split);
-?>
-                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($link['unreadNotifications'] ?? false): ?>
-                                        <?php
+?></span>
+                    </button>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+                        <!-- Profile menu -->
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                            <button type="button" @click="open = !open" aria-label="Account menu" class="relative block">
+                                <span class="theme-soft-bg theme-text theme-border flex size-10 items-center justify-center rounded-full border-[1.5px] text-sm font-black">
+                                    <?php echo e(strtoupper(substr(auth()->user()?->name ?? 'U', 0, 1))); ?>
+
+                                </span>
+                                <span class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-[var(--bg-card)] bg-green-500"></span>
+                            </button>
+
+                            <div x-show="open" x-cloak x-transition.origin.top.right
+                                 class="theme-inner absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-slate-700/80 p-1.5 shadow-2xl">
+                                <a href="<?php echo e(route('profile')); ?>" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/5">
+                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-user'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?> My profile
+                                </a>
+                                <a href="<?php echo e(route('saved.index')); ?>" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/5">
+                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-bookmark'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?> Saved posts
+                                </a>
+                                <form method="POST" action="<?php echo e(route('logout')); ?>">
+                                    <?php echo csrf_field(); ?>
+                                    <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-400 hover:bg-white/5">
+                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-arrow-right-on-rectangle'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <a href="<?php echo e(route('login')); ?>" class="rounded-xl border border-slate-700 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                            Login
+                        </a>
+                        <a href="<?php echo e(route('register')); ?>" class="theme-btn rounded-xl px-3.5 py-2.5 text-xs font-black">
+                            Sign Up
+                        </a>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Row 2: pill navigation + theme switcher -->
+            <div class="flex items-center justify-between pb-3.5 pt-0.5">
+                <nav class="theme-inner inline-flex items-center gap-0.5 rounded-2xl border border-slate-800 p-1">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $navLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $link): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <a href="<?php echo e(route($link['route'])); ?>"
+                           class="<?php echo \Illuminate\Support\Arr::toCssClasses([
+                               'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition',
+                               'theme-btn' => request()->routeIs($link['active']),
+                               'text-slate-400 hover:text-white' => ! request()->routeIs($link['active']),
+                           ]); ?>">
+                            <?php if (isset($component)) { $__componentOriginal511d4862ff04963c3c16115c05a86a9d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal511d4862ff04963c3c16115c05a86a9d = $attributes; } ?>
+<?php $component = Illuminate\View\DynamicComponent::resolve(['component' => $link['icon']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('dynamic-component'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\DynamicComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-[18px]']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
+<?php $attributes = $__attributesOriginal511d4862ff04963c3c16115c05a86a9d; ?>
+<?php unset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
+<?php $component = $__componentOriginal511d4862ff04963c3c16115c05a86a9d; ?>
+<?php unset($__componentOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php endif; ?>
+                            <span><?php echo e($link['label']); ?></span>
+                        </a>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </nav>
+
+                <?php
 $__split = function ($name, $params = []) {
     return [$name, $params];
 };
-[$__name, $__params] = $__split('unread-notification-count', []);
+[$__name, $__params] = $__split('theme-switcher');
 
 $__keyOuter = $__key ?? null;
 
@@ -368,62 +502,22 @@ unset($__params);
 unset($__componentSlots);
 unset($__split);
 ?>
-                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                </span>
-                                <span><?php echo e($link['label']); ?></span>
-                            </a>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                    </nav>
-                </div>
-            </aside>
+            </div>
+        </div>
+    </header>
+
+    <div class="mx-auto max-w-[1600px] px-4 pb-24 sm:px-6 md:pb-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-6 py-4 md:grid-cols-12 md:py-6">
 
             <!-- MAIN CONTENT -->
-            <main class="<?php echo \Illuminate\Support\Arr::toCssClasses([
-                'col-span-1 space-y-6',
-                'order-2 md:order-1 md:col-span-9 lg:col-span-6' => request()->routeIs('home'),
-                'md:col-span-9' => ! request()->routeIs('home'),
-            ]); ?>">
+            <main class="col-span-1 space-y-6 md:col-span-12">
                 <?php echo e($slot); ?>
 
             </main>
-
-            <!-- RIGHT SIDEBAR (home only) -->
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('home')): ?>
-                <aside class="order-1 col-span-1 md:order-2 md:col-span-9 lg:col-span-3">
-                    <div class="theme-card sticky top-20 rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                        <?php
-$__split = function ($name, $params = []) {
-    return [$name, $params];
-};
-[$__name, $__params] = $__split('follow-suggestions', []);
-
-$__keyOuter = $__key ?? null;
-
-$__key = null;
-$__componentSlots = [];
-
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-5', $__key);
-
-$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
-
-echo $__html;
-
-unset($__html);
-unset($__key);
-$__key = $__keyOuter;
-unset($__keyOuter);
-unset($__name);
-unset($__params);
-unset($__componentSlots);
-unset($__split);
-?>
-                    </div>
-                </aside>
-            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAV -->
+    <!-- MOBILE BOTTOM NAV (unchanged) -->
     <nav class="theme-card fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden">
         <div class="mx-auto flex max-w-md items-center">
             <!-- Primary 4 -->
@@ -558,7 +652,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-6', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-5', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -657,7 +751,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-7', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-6', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -719,7 +813,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-8', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-7', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -891,7 +985,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-9', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-2815140149-8', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 

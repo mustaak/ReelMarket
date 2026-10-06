@@ -11,6 +11,7 @@ use App\Models\Post;
 use App\Models\Product;
 use App\Models\Reel;
 use App\Models\User;
+use App\Models\Banner;
 use App\Services\BookmarkService;
 use App\Services\FollowService;
 use Livewire\Attributes\Layout;
@@ -195,6 +196,8 @@ class HomeFeed extends Component
             ->get();
         }
 
+        //dd($storyUsers);
+
         $posts = Post::with([
             'user.profile',
             'user.activeStories',
@@ -249,6 +252,10 @@ class HomeFeed extends Component
             ->take(4)
             ->get();
 
+        $slides = Banner::active()->get();
+
+        //dd($slides);
+
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,
             'posts' => $posts,
@@ -259,6 +266,7 @@ class HomeFeed extends Component
             'dealProduct' => $dealProduct,
             'dealEndsAtMs' => now()->endOfDay()->timestamp * 1000,
             'trendingReels' => $trendingReels,
+            'slides' => $slides,
         ]);
     }
 }

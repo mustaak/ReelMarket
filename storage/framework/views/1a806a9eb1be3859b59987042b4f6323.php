@@ -13,57 +13,143 @@
 <div class="w-full space-y-6 md:space-y-8">
 
     
-    <section wire:ignore x-data="{ i: 0, n: <?php echo e($slides->count()); ?>, t: null }" x-init="if (n > 1) t = setInterval(() => i = (i + 1) % n, 5500)"
-        class="theme-card overflow-hidden rounded-3xl border border-slate-800/80 shadow-xl">
-        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slides->isNotEmpty()): ?>
+    
+    
+    
 
-            <div class="grid md:min-h-80 md:grid-cols-5">
+    <section wire:ignore x-data="{
+        banner: 0,
+        bannerCount: <?php echo e($slides->count()); ?>,
+        reel: 0,
+        reelCount: <?php echo e($trendingReels->count()); ?>,
+        timer: null,
+    
+        init() {
+            if (this.bannerCount > 1) {
+                this.timer = setInterval(() => {
+                    this.banner = (this.banner + 1) % this.bannerCount
+                }, 600000)
+            }
+        },
+    
+        goBanner(index) {
+            this.banner = index
+    
+            if (this.timer) {
+                clearInterval(this.timer)
+    
+                if (this.bannerCount > 1) {
+                    this.timer = setInterval(() => {
+                        this.banner = (this.banner + 1) % this.bannerCount
+                    }, 6000)
+                }
+            }
+        },
+    
+        nextReel() {
+            if (this.reelCount > 1) {
+                this.reel = (this.reel + 1) % this.reelCount
+            }
+        },
+    
+        previousReel() {
+            if (this.reelCount > 1) {
+                this.reel =
+                    (this.reel - 1 + this.reelCount) % this.reelCount
+            }
+        }
+    }" x-init="init()" class="w-full">
 
-                
-                <div class="flex flex-col justify-center gap-4 p-6 sm:p-8 md:col-span-2 md:p-10">
+        
+        
+        
 
-                    <div class="grid">
+        <div class="theme-card overflow-hidden rounded-3xl border border-slate-800/80 shadow-2xl">
 
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $slides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $slide): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <div x-show="i === <?php echo e($k); ?>" x-transition:enter="transition-opacity duration-500"
-                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                class="col-start-1 row-start-1 space-y-3">
+            
+            
+            
 
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slides->isNotEmpty()): ?>
+
+                <div class="relative h-[360px] overflow-hidden sm:h-[360px] lg:h-[360px]">
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $slides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $slide): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <div x-show="banner === <?php echo e($k); ?>"
+                            x-transition:enter="transition-opacity duration-500 ease-out"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition-opacity duration-300 ease-in"
+                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                            class="absolute inset-0">
+
+                            
+                            
+                            
+
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->image): ?>
+                                <img src="<?php echo e(asset('storage/' . $slide->image)); ?>" alt="<?php echo e($slide->title); ?>"
+                                    class="absolute inset-0 h-full w-full object-cover object-center">
+
+                                
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10">
+                                </div>
+
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10">
+                                </div>
+                            <?php else: ?>
+                                <div class="absolute inset-0 theme-inner"></div>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+
+                            
+                            
+                            
+
+                            <div
+                                class="relative z-10 flex h-full max-w-2xl flex-col justify-center px-6 py-8 sm:px-10 lg:px-14">
+
+                                
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->tag): ?>
                                     <span
-                                        class="theme-soft-bg theme-text inline-block rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]">
+                                        class="theme-soft-bg theme-text mb-4 inline-flex w-fit rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]">
                                         <?php echo e($slide->tag); ?>
 
                                     </span>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                <h2 class="text-3xl font-black leading-tight text-white sm:text-4xl">
 
+                                
+                                <h1
+                                    class="max-w-xl text-3xl font-black leading-[1.08] text-white sm:text-4xl lg:text-5xl">
                                     <?php echo e($slide->title); ?>
 
 
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->accent): ?>
-                                        <br>
-                                        <span class="theme-text">
+                                        <span class="theme-text block">
                                             <?php echo e($slide->accent); ?>
 
                                         </span>
                                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                </h2>
+                                </h1>
 
+
+                                
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->sub): ?>
-                                    <p class="max-w-md text-sm text-slate-400">
+                                    <p class="mt-4 max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
                                         <?php echo e($slide->sub); ?>
 
                                     </p>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                <div class="flex flex-wrap gap-2 pt-1">
+
+                                
+                                <div class="mt-6 flex flex-wrap gap-3">
 
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->cta_text && $slide->cta_route): ?>
                                         <a href="<?php echo e(route($slide->cta_route)); ?>"
-                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wide">
+                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wide shadow-lg transition hover:brightness-110">
                                             <?php echo e($slide->cta_text); ?>
 
 
@@ -92,8 +178,9 @@
                                         </a>
                                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
+
                                     <a href="<?php echo e(route('reels.index')); ?>"
-                                        class="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-5 py-2.5 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                        class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-5 py-3 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/10">
                                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -116,86 +203,60 @@
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
+
                                         Watch reels
                                     </a>
 
                                 </div>
 
                             </div>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
 
-                    </div>
+                        </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+
 
                     
+                    
+                    
+
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slides->count() > 1): ?>
-                        <div class="flex items-center gap-1.5 pt-2">
+
+                        <div class="absolute bottom-5 left-6 z-30 flex items-center gap-2 sm:left-10 lg:left-14">
 
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $slides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $slide): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                                <button type="button" @click="i = <?php echo e($k); ?>"
-                                    aria-label="Slide <?php echo e($k + 1); ?>"
-                                    :class="i === <?php echo e($k); ?> ?
-                                        'w-5 bg-(--accent-primary)' :
-                                        'w-1.5 bg-slate-700'"
-                                    class="h-1.5 rounded-full transition-all"></button>
+                                <button type="button" @click="goBanner(<?php echo e($k); ?>)"
+                                    aria-label="Go to slide <?php echo e($k + 1); ?>"
+                                    :class="banner === <?php echo e($k); ?> ?
+                                        'w-7 bg-(--accent-primary)' :
+                                        'w-2 bg-white/40 hover:bg-white/70'"
+                                    class="h-2 rounded-full transition-all duration-300"></button>
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+
+                        </div>
+
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+
+                    
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slides->count() > 1): ?>
+                        <div
+                            class="absolute bottom-5 right-6 z-30 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                            <span x-text="banner + 1"></span>
+                            /
+                            <?php echo e($slides->count()); ?>
 
                         </div>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                 </div>
-
+            <?php else: ?>
                 
-                <div class="theme-inner relative min-h-52 overflow-hidden md:col-span-3">
+                <div class="flex h-[360px] items-center justify-center theme-inner sm:h-[400px]">
 
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $slides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $slide): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($slide->image): ?>
-                            <div x-show="i === <?php echo e($k); ?>"
-                                x-transition:enter="transition-opacity duration-500"
-                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                class="absolute inset-0 bg-right bg-no-repeat"
-                                style="
-                                background-image: url('<?php echo e(asset('storage/' . $slide->image)); ?>');
-                                background-size: 180% 102%;
-                                background-position: 95% 15%;
-                            ">
-                            </div>
-                        <?php else: ?>
-                            <div x-show="i === <?php echo e($k); ?>"
-                                class="absolute inset-0 flex items-center justify-center">
-                                <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-photo'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-16 text-slate-700']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+                    <div class="text-center text-slate-600">
 
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                            </div>
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-
-                </div>
-
-            </div>
-        <?php else: ?>
-            
-            <div class="flex min-h-80 items-center justify-center text-slate-600">
-                <div class="text-center">
-                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('heroicon-o-photo'); ?>
@@ -217,36 +278,62 @@
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                    <p class="mt-3 text-sm font-semibold">
-                        No active banners available
-                    </p>
+
+                        <p class="mt-3 text-sm font-semibold">
+                            No active banners available
+                        </p>
+
+                    </div>
+
                 </div>
-            </div>
 
-        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    </section>
 
-    <section>
-        <div class="flex items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
-            <div>
-                <p class="theme-text text-[10px] font-bold uppercase tracking-[0.22em]">YourBrand</p>
-                <h2 class="mt-1 text-2xl font-black text-white">Your feed</h2>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="<?php echo e(route('shop.index')); ?>"
-                    class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
-                    Shop
-                </a>
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
-                    <a href="<?php echo e(route('saved.index')); ?>"
-                        class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">Saved</a>
-                    <a href="<?php echo e(route('posts.create')); ?>"
-                        class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
-                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+            
+            
+            
+
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($trendingReels->isNotEmpty()): ?>
+
+                <?php
+                    $heroReel = $trendingReels->first();
+                ?>
+
+                <div class="border-t border-slate-800/80 bg-black/10 p-4 sm:p-5 lg:p-6">
+
+                    
+
+                    <div class="mb-4 flex items-center justify-between gap-3">
+
+                        <div>
+
+                            <p class="theme-text text-[10px] font-black uppercase tracking-[0.2em]">
+                                ReelMarket TV
+                            </p>
+
+                            <h2 class="mt-1 text-lg font-black text-white sm:text-xl">
+                                Shop through reels
+                            </h2>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Watch creators. Discover products. Shop what you love.
+                            </p>
+
+                        </div>
+
+
+                        
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($trendingReels->count() > 1): ?>
+                            <div class="flex items-center gap-2">
+
+                                <button type="button" @click="previousReel()" aria-label="Previous reel"
+                                    class="theme-inner flex size-9 items-center justify-center rounded-xl border border-slate-800 text-slate-300 transition hover:border-slate-600 hover:text-white">
+                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-plus'); ?>
+<?php $component->withName('heroicon-o-chevron-left'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
@@ -265,106 +352,435 @@
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                        <span>Create post</span>
-                    </a>
-                <?php else: ?>
-                    <a href="<?php echo e(route('login')); ?>" class="theme-btn rounded-lg px-3 py-2 text-xs font-black">
-                        Join
-                    </a>
-                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            </div>
-        </div>
+                                </button>
 
-        <div class="theme-card rounded-lg border border-slate-800/80 p-4 shadow-xl sm:p-5">
-            <div class="mb-3 flex items-center justify-between gap-3">
-                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-slate-300">Following</h3>
-                <span
-                    class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"><?php echo e($storyUsers->count()); ?>
+                                <button type="button" @click="nextReel()" aria-label="Next reel"
+                                    class="theme-inner flex size-9 items-center justify-center rounded-xl border border-slate-800 text-slate-300 transition hover:border-slate-600 hover:text-white">
+                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-chevron-right'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-4']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                    creators</span>
-            </div>
-
-            <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
-                <div class="shrink-0">
-                    <?php
-$__split = function ($name, $params = []) {
-    return [$name, $params];
-};
-[$__name, $__params] = $__split('story.create-story', []);
-
-$__keyOuter = $__key ?? null;
-
-$__key = null;
-$__componentSlots = [];
-
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-0', $__key);
-
-$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
-
-echo $__html;
-
-unset($__html);
-unset($__key);
-$__key = $__keyOuter;
-unset($__keyOuter);
-unset($__name);
-unset($__params);
-unset($__componentSlots);
-unset($__split);
-?>
-                </div>
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $storyUsers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sUser): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                    <?php
-                        $activeStory = $sUser->activeStories->first();
-                        $hasStory = $activeStory !== null;
-
-                        // Apne Story model ke viewer relation/logic ke according
-                        // is value ko set karna hoga.
-                        $hasViewed = $hasStory ? $activeStory->views->contains('user_id', auth()->id()) : false;
-                    ?>
-
-                    <button type="button" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'story-user-'.e($sUser->id).''; ?>wire:key="story-user-<?php echo e($sUser->id); ?>"
-                        <?php if($hasStory): ?> wire:click="$dispatch('open-story', { storyId: <?php echo e($activeStory->id); ?> })" <?php endif; ?>
-                        class="flex min-w-[72px] shrink-0 flex-col items-center gap-2 text-center">
-
-                        <div class="<?php echo \Illuminate\Support\Arr::toCssClasses([
-                            'relative size-16 rounded-full p-[3px]',
-                            'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600' =>
-                                $hasStory && !$hasViewed,
-                            'bg-slate-600' => $hasStory && $hasViewed,
-                            'bg-slate-800' => !$hasStory,
-                        ]); ?>">
-
-                            <div
-                                class="h-full w-full overflow-hidden rounded-full border-2 border-slate-950 bg-slate-950">
-
-                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(optional($sUser->profile)->profile_picture): ?>
-                                    <img src="<?php echo e(asset('storage/' . $sUser->profile->profile_picture)); ?>"
-                                        alt="<?php echo e($sUser->name); ?>" class="h-full w-full object-cover">
-                                <?php else: ?>
-                                    <span
-                                        class="flex h-full w-full items-center justify-center text-sm font-black uppercase text-white">
-                                        <?php echo e(Str::substr($sUser->name, 0, 1)); ?>
-
-                                    </span>
-                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                </button>
 
                             </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                    </div>
+
+
+                    
+                    
+                    
+
+                    <div class="relative overflow-hidden">
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $trendingReels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rIndex => $reel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <?php
+                                $reelUser = $reel->user;
+                                $reelProfile = $reelUser?->profile;
+                                $reelProduct = $reel->product;
+                                $reelProductImage = $reelProduct?->images?->first()?->image;
+
+                                $reelPrice = $reelProduct
+                                    ? (float) ($reelProduct->sale_price ?: $reelProduct->price)
+                                    : null;
+                            ?>
+
+                            <div x-show="reel === <?php echo e($rIndex); ?>"
+                                x-transition:enter="transition-opacity duration-300"
+                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                class="grid gap-4 md:grid-cols-5">
+
+                                
+                                
+                                
+
+                                <div
+                                    class="theme-inner flex min-w-0 flex-col justify-between rounded-2xl border border-slate-800/80 p-5 md:col-span-3">
+
+                                    <div>
+
+                                        
+
+                                        <div class="flex items-center gap-3">
+
+                                            <div
+                                                class="theme-soft-bg theme-text flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-700 text-xs font-black uppercase">
+
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($reelProfile?->profile_picture): ?>
+                                                    <img src="<?php echo e(asset('storage/' . $reelProfile->profile_picture)); ?>"
+                                                        alt="<?php echo e($reelUser?->name); ?>"
+                                                        class="h-full w-full object-cover">
+                                                <?php else: ?>
+                                                    <?php echo e(Str::substr($reelUser?->name ?? 'U', 0, 1)); ?>
+
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                            </div>
+
+
+                                            <div class="min-w-0">
+
+                                                <p class="truncate text-sm font-black text-white">
+                                                    <?php echo e($reelProfile?->username ?? $reelUser?->name); ?>
+
+                                                </p>
+
+                                                <p class="text-[11px] text-slate-500">
+                                                    Featured creator
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        
+
+                                        <h3
+                                            class="mt-5 line-clamp-2 text-xl font-black leading-tight text-white sm:text-2xl">
+                                            <?php echo e($reel->caption ?? 'Discover something worth watching'); ?>
+
+                                        </h3>
+
+
+                                        
+
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($reelProduct): ?>
+                                            <div
+                                                class="theme-card mt-5 flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 p-3">
+
+                                                <div class="flex min-w-0 items-center gap-3">
+
+                                                    <div
+                                                        class="theme-inner flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($reelProductImage): ?>
+                                                            <img src="<?php echo e(asset('storage/' . $reelProductImage)); ?>"
+                                                                alt="<?php echo e($reelProduct->name); ?>"
+                                                                class="h-full w-full object-cover">
+                                                        <?php else: ?>
+                                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-shopping-bag'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5 text-slate-500']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                                    </div>
+
+
+                                                    <div class="min-w-0">
+
+                                                        <p class="truncate text-xs font-bold text-white">
+                                                            <?php echo e($reelProduct->name); ?>
+
+                                                        </p>
+
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($reelPrice !== null): ?>
+                                                            <p class="mt-0.5 text-sm font-black theme-text">
+                                                                ₹<?php echo e(number_format($reelPrice, 0)); ?>
+
+                                                            </p>
+                                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <a href="<?php echo e(route('product.detail', $reelProduct->slug ?? $reelProduct->id)); ?>"
+                                                    class="theme-btn shrink-0 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-wide">
+                                                    Shop this reel
+                                                </a>
+
+                                            </div>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                                    </div>
+
+
+                                    
+
+                                    <div class="mt-5 flex flex-wrap gap-2">
+
+                                        <a href="<?php echo e(route('reels.index', ['reel' => $reel->id])); ?>"
+                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black">
+                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-play'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-4']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                            Watch reel
+                                        </a>
+
+                                        <a href="<?php echo e(route('reels.index')); ?>"
+                                            class="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                            All reels
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+
+                                
+                                
+                                
+
+                                <a href="<?php echo e(route('reels.index', ['reel' => $reel->id])); ?>"
+                                    class="group relative min-h-[280px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 md:col-span-2">
+
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($reel->thumbnail): ?>
+                                        <img src="<?php echo e(asset('storage/' . $reel->thumbnail)); ?>"
+                                            alt="Reel by <?php echo e($reelProfile?->username ?? $reelUser?->name); ?>"
+                                            class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                                    <?php else: ?>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-slate-950">
+                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-video-camera'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-12 text-slate-700']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                        </div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+
+                                    
+
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/20">
+                                    </div>
+
+
+                                    
+
+                                    <span
+                                        class="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-xl transition group-hover:scale-110">
+                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-s-play'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'ml-0.5 size-6']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                    </span>
+
+
+                                    
+
+                                    <div class="absolute inset-x-0 bottom-0 p-4">
+
+                                        <p class="truncate text-xs font-black text-white">
+                                            <?php echo e($reelProfile?->username ?? $reelUser?->name); ?>
+
+                                        </p>
+
+                                        <p
+                                            class="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white/60">
+                                            Watch & shop
+                                        </p>
+
+                                    </div>
+
+                                </a>
+
+                            </div>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+
+                    </div>
+
+
+                    
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($trendingReels->count() > 1): ?>
+
+                        <div class="mt-4 flex items-center justify-center gap-1.5">
+
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $trendingReels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rIndex => $reel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <button type="button" @click="reel = <?php echo e($rIndex); ?>"
+                                    :class="reel === <?php echo e($rIndex); ?> ?
+                                        'w-6 bg-(--accent-primary)' :
+                                        'w-1.5 bg-slate-700'"
+                                    class="h-1.5 rounded-full transition-all duration-300"
+                                    aria-label="Reel <?php echo e($rIndex + 1); ?>"></button>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
 
                         </div>
 
-                        <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
-                            <?php echo e(Str::before($sUser->name, ' ')); ?>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                        </span>
+                </div>
+            <?php else: ?>
+                
+                
+                
 
-                    </button>
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-            </div>
+                <div
+                    class="flex flex-col gap-4 border-t border-slate-800/80 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+
+                    <div class="flex items-center gap-4">
+
+                        <div
+                            class="theme-soft-bg theme-text flex size-12 shrink-0 items-center justify-center rounded-full">
+                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-users'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-6']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                        </div>
+
+                        <div>
+
+                            <p class="text-sm font-black text-white">
+                                Join the community
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Follow creators, watch stories and discover products.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <a href="<?php echo e(route('reels.index')); ?>"
+                        class="theme-btn inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black">
+                        Explore reels
+
+                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-arrow-right'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-4']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                    </a>
+
+                </div>
+
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
         </div>
+
     </section>
-
-
     
     <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $trust; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
@@ -403,12 +819,12 @@ unset($__split);
 
     
     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($categories->isNotEmpty()): ?>
-        <section>
+        <section class="theme-card rounded-2xl px-3 py-3">
             <div class="mb-3 flex items-center justify-between">
                 <h2 class="text-lg font-black text-white">Shop by category</h2>
                 <a href="<?php echo e(route('shop.index')); ?>" class="theme-text text-xs font-bold hover:underline">View all</a>
             </div>
-            <div class="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+            <div class="no-scrollbar theme-card flex items-center gap-3 rounded-2xl overflow-x-auto">
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                     <a href="<?php echo e(route('shop.index', ['selectedCategory' => $category->slug ?? $category->id])); ?>"
                         <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'home-cat-'.e($category->id).''; ?>wire:key="home-cat-<?php echo e($category->id); ?>"
@@ -452,7 +868,7 @@ unset($__split);
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 theme-card rounded-2xl px-1 py-1">
 
         <div class="min-w-0 space-y-8 lg:col-span-8">
 
@@ -671,350 +1087,6 @@ unset($__split);
                 </section>
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-            
-            <section class="mx-auto w-full max-w-5xl space-y-5 md:space-y-6">
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $posts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                    <?php
-                        $author = $post->user;
-                        $authorProfile = $author?->profile;
-                        $followStatus = $followStatuses[$post->user_id] ?? null;
-                        $isFollowing = $followStatus === 'accepted';
-                        $isFollowRequested = $followStatus === 'pending';
-                        $isLiked = auth()->check() && in_array($post->id, $likedPostIds, true);
-                        $isBookmarked = auth()->check() && in_array($post->id, $bookmarkedPostIds, true);
-                        $postImage = $post->image ?: $post->images?->first()?->image_path ?? null;
-                        $productImage = $post->product?->images?->first()?->image;
-                    ?>
-
-                    <article id="post-<?php echo e($post->id); ?>" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'post-card-'.e($post->id).''; ?>wire:key="post-card-<?php echo e($post->id); ?>"
-                        class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
-                        <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
-                            <div class="flex min-w-0 items-center gap-3">
-
-                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($author?->activeStories?->isNotEmpty()): ?>
-                                    <button type="button"
-                                        wire:click="$dispatch('open-story', { storyId: <?php echo e($author->activeStories->first()->id); ?> })"
-                                        class="relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
-                                        aria-label="View <?php echo e($author?->name); ?>'s story">
-                                        <div
-                                            class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-950 text-sm font-black uppercase">
-                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
-                                                <img src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
-                                                    alt="<?php echo e($author?->name); ?>" class="h-full w-full object-cover" />
-                                            <?php else: ?>
-                                                <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
-
-                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                        </div>
-                                    </button>
-                                <?php else: ?>
-                                    <a href="<?php echo e(route('users.show', $author)); ?>"
-                                        class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->profile_picture): ?>
-                                            <img src="<?php echo e(asset('storage/' . $authorProfile->profile_picture)); ?>"
-                                                alt="<?php echo e($author?->name); ?>" class="h-full w-full object-cover" />
-                                        <?php else: ?>
-                                            <?php echo e(Str::substr($author?->name ?? 'U', 0, 2)); ?>
-
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    </a>
-                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5">
-                                        <a href="<?php echo e(route('users.show', $author)); ?>"
-                                            class="truncate text-sm font-bold text-white">
-                                            <?php echo e($authorProfile?->username ?? $author?->name); ?>
-
-                                        </a>
-
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($authorProfile?->is_verified): ?>
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-check-circle'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-4 theme-text']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    </div>
-
-                                    <p class="text-[11px] text-slate-400">
-                                        <?php echo e($post->created_at->diffForHumans()); ?>
-
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->check() && auth()->id() !== $post->user_id): ?>
-                                <button wire:click="toggleFollow(<?php echo e($post->user_id); ?>)" type="button"
-                                    class="rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition <?php echo e($isFollowing || $isFollowRequested ? 'border-slate-700 bg-slate-900 text-slate-200' : 'theme-btn text-black'); ?>">
-                                    <?php echo e($isFollowing ? 'Following' : ($isFollowRequested ? 'Requested' : 'Follow')); ?>
-
-                                </button>
-                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
-
-                        <div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-900">
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($postImage): ?>
-                                <img src="<?php echo e(asset('storage/' . $postImage)); ?>" alt="Post content"
-                                    class="h-full w-full object-cover" />
-                            <?php else: ?>
-                                <div
-                                    class="flex h-full w-full items-center justify-center text-sm font-bold uppercase tracking-[0.25em] text-slate-500">
-                                    Media
-                                </div>
-                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
-
-                        <div class="space-y-4 p-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <button wire:click="toggleLike(<?php echo e($post->id); ?>)" type="button"
-                                        class="flex items-center gap-2 text-slate-200 transition hover:text-white">
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isLiked): ?>
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-heart'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-6 text-rose-500']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <?php else: ?>
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-heart'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-6']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                        <span class="text-xs font-bold">
-                                            <?php echo e(number_format(max((int) ($post->likes_count ?? 0), $post->likes->count()))); ?>
-
-                                        </span>
-                                    </button>
-
-                                    <button type="button" wire:click="openComments(<?php echo e($post->id); ?>)"
-                                        class="flex items-center gap-2 text-slate-200 transition hover:text-white">
-                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-chat-bubble-left'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-5']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <span
-                                            class="text-xs font-bold"><?php echo e(max((int) ($post->comments_count ?? 0), $post->comments->count())); ?></span>
-                                    </button>
-                                </div>
-
-                                <div class="flex items-center gap-4">
-                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($post->user_id !== auth()->id()): ?>
-                                            <button type="button"
-                                                wire:click="$dispatch('open-report', { type: 'post', id: <?php echo e($post->id); ?> })"
-                                                aria-label="Report post"
-                                                class="text-slate-400 transition hover:text-white">
-                                                <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-flag'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-5']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                            </button>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    <button type="button" wire:click="toggleBookmark(<?php echo e($post->id); ?>)"
-                                        aria-label="<?php echo e($isBookmarked ? 'Remove saved post' : 'Save post'); ?>"
-                                        aria-pressed="<?php echo e($isBookmarked ? 'true' : 'false'); ?>"
-                                        class="transition hover:text-white <?php echo e($isBookmarked ? 'theme-text' : 'text-slate-300'); ?>">
-                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isBookmarked): ?>
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-bookmark'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-5']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <?php else: ?>
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-bookmark'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-5']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($post->content): ?>
-                                <p class="text-sm leading-6 text-slate-300">
-                                    <span
-                                        class="mr-2 font-black text-white"><?php echo e($authorProfile?->username ?? $author?->name); ?></span>
-                                    <?php echo e($post->content); ?>
-
-                                </p>
-                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($post->product): ?>
-                                <div
-                                    class="theme-inner flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 p-3">
-                                    <div class="flex min-w-0 items-center gap-3">
-                                        <div
-                                            class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
-                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($productImage): ?>
-                                                <img src="<?php echo e(asset('storage/' . $productImage)); ?>"
-                                                    alt="<?php echo e($post->product->name); ?>"
-                                                    class="h-full w-full object-cover" />
-                                            <?php else: ?>
-                                                <span
-                                                    class="text-[10px] font-black uppercase text-slate-400"><?php echo e(Str::substr($post->product->name, 0, 2)); ?></span>
-                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                        </div>
-
-                                        <div class="min-w-0">
-                                            <p class="truncate text-xs font-bold text-white">
-                                                <?php echo e($post->product->name); ?></p>
-                                            <p class="text-[11px] font-bold theme-text">
-                                                ₹<?php echo e(number_format((float) ($post->product->sale_price ?? $post->product->price), 0)); ?>
-
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <a href="<?php echo e(route('product.detail', $post->product->slug ?? $post->product->id)); ?>"
-                                        class="theme-btn shrink-0 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wide">
-                                        Shop now
-                                    </a>
-                                </div>
-                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
-                    </article>
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                    <div class="theme-card rounded-lg border border-slate-800/80 p-10 text-center shadow-xl">
-                        <p class="text-3xl">📸</p>
-                        <h3 class="mt-4 text-lg font-black text-white">No posts available</h3>
-                        <p class="mt-2 text-sm text-slate-400">Start following creators or check back later.</p>
-                    </div>
-                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($posts->hasPages()): ?>
-                    <div class="pb-6">
-                        <?php echo e($posts->links()); ?>
-
-                    </div>
-                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            </section>
         </div>
 
         
@@ -1153,136 +1225,9 @@ unset($__split);
                         </a>
                     </div>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
-                <div class="theme-card rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                    <?php
-$__split = function ($name, $params = []) {
-    return [$name, $params];
-};
-[$__name, $__params] = $__split('follow-suggestions', []);
-
-$__keyOuter = $__key ?? null;
-
-$__key = null;
-$__componentSlots = [];
-
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-1', $__key);
-
-$__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
-
-echo $__html;
-
-unset($__html);
-unset($__key);
-$__key = $__keyOuter;
-unset($__keyOuter);
-unset($__name);
-unset($__params);
-unset($__componentSlots);
-unset($__split);
-?>
-                </div>
             </div>
         </aside>
     </div>
-
-    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($activeCommentsPostId): ?>
-        <?php $activePost = $posts->firstWhere('id', $activeCommentsPostId); ?>
-        <div class="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Comments"
-            wire:keydown.escape.window="closeComments">
-            <div class="absolute inset-0 bg-black/60" wire:click="closeComments"></div>
-
-            <div
-                class="theme-card absolute inset-x-0 bottom-0 flex max-h-[70vh] flex-col rounded-t-2xl border-t border-slate-800/80 pb-[env(safe-area-inset-bottom)] md:inset-x-auto md:bottom-6 md:right-6 md:w-96 md:rounded-2xl md:border md:pb-0">
-                <header class="flex items-center justify-between border-b border-slate-800/80 px-4 py-3">
-                    <h2 class="text-sm font-black text-white">Comments</h2>
-                    <button type="button" wire:click="closeComments" aria-label="Close"
-                        class="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white">
-                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-x-mark'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-5']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                    </button>
-                </header>
-
-                <ul class="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $activePost?->comments ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $comment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                        <li class="flex items-start gap-2.5">
-                            <span
-                                class="theme-soft-bg flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white">
-                                <?php echo e(strtoupper(substr($comment->user->name, 0, 1))); ?>
-
-                            </span>
-                            <p class="text-sm text-slate-200">
-                                <span class="font-bold text-white"><?php echo e($comment->user->name); ?></span>
-                                <span class="ml-1 text-slate-300"><?php echo e($comment->content); ?></span>
-                            </p>
-                        </li>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                        <li class="py-10 text-center text-xs text-slate-500">No comments yet. Be the first.</li>
-                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                </ul>
-
-                <form wire:submit="postComment" class="flex items-center gap-2 border-t border-slate-800/80 p-3">
-                    <input wire:model="newComment" type="text" placeholder="Write a comment..."
-                        class="theme-inner min-w-0 flex-1 rounded-full border border-slate-700 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-(--accent-primary) focus:outline-none">
-                    <button type="submit" aria-label="Post comment"
-                        class="theme-btn flex size-10 shrink-0 items-center justify-center rounded-full">
-                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-paper-airplane'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'size-4']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                    </button>
-                </form>
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['newComment'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                    <p class="px-3 pb-2 text-xs text-rose-400"><?php echo e($message); ?></p>
-                <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            </div>
-        </div>
-    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     <?php
 $__split = function ($name, $params = []) {
@@ -1295,7 +1240,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-2', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-0', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 
@@ -1321,7 +1266,7 @@ $__keyOuter = $__key ?? null;
 $__key = null;
 $__componentSlots = [];
 
-$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-3', $__key);
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-378827548-1', $__key);
 
 $__html = app('livewire')->mount($__name, $__params, $__key, $__componentSlots);
 

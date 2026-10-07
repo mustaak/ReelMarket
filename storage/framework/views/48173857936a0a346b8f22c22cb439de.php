@@ -20,10 +20,11 @@
     ][$bgTheme] ?? ['body' => '#0b0813', 'card' => '#140e26', 'inner' => '#1a1333'];
 
     // Desktop pill navigation (main pages)
-    $navLinks = [
-        ['route' => 'home',        'label' => 'Home',  'icon' => 'heroicon-o-home',         'active' => 'home'],
-        ['route' => 'shop.index',  'label' => 'Shop',  'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
-        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle',  'active' => 'reels.*'],
+   $navLinks = [
+        ['route' => 'home', 'label' => 'Home', 'icon' => 'heroicon-o-home', 'active' => 'home'],
+        ['route' => 'shop.index', 'label' => 'Shop', 'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
+        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle', 'active' => 'reels.*'],
+        ['route' => 'social.index', 'label' => 'Social', 'icon' => 'heroicon-o-users', 'active' => 'social.*'], // ← ADD
     ];
 ?>
 
@@ -550,6 +551,35 @@ unset($__split);
 <?php endif; ?>
                     <span class="text-[10px] leading-none <?php echo e(request()->routeIs('home') ? 'font-bold' : 'font-medium'); ?>">
                         Home
+                    </span>
+                </a>
+                <!-- Social -->
+                <a href="<?php echo e(route('social.index')); ?>" aria-label="Social"
+                    class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 <?php echo e(request()->routeIs('social.*') ? 'theme-text' : 'text-slate-500'); ?>">
+                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-users'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-6']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                    <span class="text-[10px] leading-none <?php echo e(request()->routeIs('social.*') ? 'font-bold' : 'font-medium'); ?>">
+                        Social
                     </span>
                 </a>
                 <!-- Shop -->

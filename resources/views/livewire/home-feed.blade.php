@@ -12,221 +12,532 @@
 
 <div class="w-full space-y-6 md:space-y-8">
 
-    {{-- ================= HERO ================= --}}
-    <section wire:ignore x-data="{ i: 0, n: {{ $slides->count() }}, t: null }" x-init="if (n > 1) t = setInterval(() => i = (i + 1) % n, 5500)"
-        class="theme-card overflow-hidden rounded-3xl border border-slate-800/80 shadow-xl">
-        @if ($slides->isNotEmpty())
+    {{-- ================= HERO / BANNER SLIDER ================= --}}
+    {{-- ========================================================= --}}
+    {{-- HERO: BANNER SLIDER + REEL PROMOTION                      --}}
+    {{-- ========================================================= --}}
 
-            <div class="grid md:min-h-80 md:grid-cols-5">
+    <section wire:ignore x-data="{
+        banner: 0,
+        bannerCount: {{ $slides->count() }},
+        reel: 0,
+        reelCount: {{ $trendingReels->count() }},
+        timer: null,
+    
+        init() {
+            if (this.bannerCount > 1) {
+                this.timer = setInterval(() => {
+                    this.banner = (this.banner + 1) % this.bannerCount
+                }, 600000)
+            }
+        },
+    
+        goBanner(index) {
+            this.banner = index
+    
+            if (this.timer) {
+                clearInterval(this.timer)
+    
+                if (this.bannerCount > 1) {
+                    this.timer = setInterval(() => {
+                        this.banner = (this.banner + 1) % this.bannerCount
+                    }, 6000)
+                }
+            }
+        },
+    
+        nextReel() {
+            if (this.reelCount > 1) {
+                this.reel = (this.reel + 1) % this.reelCount
+            }
+        },
+    
+        previousReel() {
+            if (this.reelCount > 1) {
+                this.reel =
+                    (this.reel - 1 + this.reelCount) % this.reelCount
+            }
+        }
+    }" x-init="init()" class="w-full">
 
-                {{-- ================= BANNER CONTENT ================= --}}
-                <div class="flex flex-col justify-center gap-4 p-6 sm:p-8 md:col-span-2 md:p-10">
+        {{-- ===================================================== --}}
+        {{-- MAIN HERO CARD                                       --}}
+        {{-- ===================================================== --}}
 
-                    <div class="grid">
+        <div class="theme-card overflow-hidden rounded-3xl border border-slate-800/80 shadow-2xl">
 
-                        @foreach ($slides as $k => $slide)
-                            <div x-show="i === {{ $k }}" x-transition:enter="transition-opacity duration-500"
-                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                class="col-start-1 row-start-1 space-y-3">
+            {{-- ================================================= --}}
+            {{-- BANNER SLIDER                                    --}}
+            {{-- ================================================= --}}
 
+            @if ($slides->isNotEmpty())
+
+                <div class="relative h-[360px] overflow-hidden sm:h-[360px] lg:h-[360px]">
+
+                    @foreach ($slides as $k => $slide)
+                        <div x-show="banner === {{ $k }}"
+                            x-transition:enter="transition-opacity duration-500 ease-out"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition-opacity duration-300 ease-in"
+                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                            class="absolute inset-0">
+
+                            {{-- ================================= --}}
+                            {{-- BANNER IMAGE                       --}}
+                            {{-- ================================= --}}
+
+                            @if ($slide->image)
+                                <img src="{{ asset('storage/' . $slide->image) }}" alt="{{ $slide->title }}"
+                                    class="absolute inset-0 h-full w-full object-cover object-center">
+
+                                {{-- Dark overlay so text remains readable --}}
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10">
+                                </div>
+
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10">
+                                </div>
+                            @else
+                                <div class="absolute inset-0 theme-inner"></div>
+                            @endif
+
+
+                            {{-- ================================= --}}
+                            {{-- BANNER CONTENT                     --}}
+                            {{-- ================================= --}}
+
+                            <div
+                                class="relative z-10 flex h-full max-w-2xl flex-col justify-center px-6 py-8 sm:px-10 lg:px-14">
+
+                                {{-- Tag --}}
                                 @if ($slide->tag)
                                     <span
-                                        class="theme-soft-bg theme-text inline-block rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]">
+                                        class="theme-soft-bg theme-text mb-4 inline-flex w-fit rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]">
                                         {{ $slide->tag }}
                                     </span>
                                 @endif
 
-                                <h2 class="text-3xl font-black leading-tight text-white sm:text-4xl">
 
+                                {{-- Title --}}
+                                <h1
+                                    class="max-w-xl text-3xl font-black leading-[1.08] text-white sm:text-4xl lg:text-5xl">
                                     {{ $slide->title }}
 
                                     @if ($slide->accent)
-                                        <br>
-                                        <span class="theme-text">
+                                        <span class="theme-text block">
                                             {{ $slide->accent }}
                                         </span>
                                     @endif
 
-                                </h2>
+                                </h1>
 
+
+                                {{-- Description --}}
                                 @if ($slide->sub)
-                                    <p class="max-w-md text-sm text-slate-400">
+                                    <p class="mt-4 max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
                                         {{ $slide->sub }}
                                     </p>
                                 @endif
 
-                                <div class="flex flex-wrap gap-2 pt-1">
+
+                                {{-- Buttons --}}
+                                <div class="mt-6 flex flex-wrap gap-3">
 
                                     @if ($slide->cta_text && $slide->cta_route)
                                         <a href="{{ route($slide->cta_route) }}"
-                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wide">
+                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wide shadow-lg transition hover:brightness-110">
                                             {{ $slide->cta_text }}
 
                                             <x-heroicon-o-arrow-right class="size-4" />
                                         </a>
                                     @endif
 
+
                                     <a href="{{ route('reels.index') }}"
-                                        class="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-5 py-2.5 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                        class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-5 py-3 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/10">
                                         <x-heroicon-o-play class="size-4" />
+
                                         Watch reels
                                     </a>
 
                                 </div>
 
                             </div>
-                        @endforeach
 
-                    </div>
+                        </div>
+                    @endforeach
 
-                    {{-- ================= SLIDER DOTS ================= --}}
+
+                    {{-- ========================================= --}}
+                    {{-- BANNER NAVIGATION                         --}}
+                    {{-- ========================================= --}}
+
                     @if ($slides->count() > 1)
-                        <div class="flex items-center gap-1.5 pt-2">
+
+                        <div class="absolute bottom-5 left-6 z-30 flex items-center gap-2 sm:left-10 lg:left-14">
 
                             @foreach ($slides as $k => $slide)
-                                <button type="button" @click="i = {{ $k }}"
-                                    aria-label="Slide {{ $k + 1 }}"
-                                    :class="i === {{ $k }} ?
-                                        'w-5 bg-(--accent-primary)' :
-                                        'w-1.5 bg-slate-700'"
-                                    class="h-1.5 rounded-full transition-all"></button>
+                                <button type="button" @click="goBanner({{ $k }})"
+                                    aria-label="Go to slide {{ $k + 1 }}"
+                                    :class="banner === {{ $k }} ?
+                                        'w-7 bg-(--accent-primary)' :
+                                        'w-2 bg-white/40 hover:bg-white/70'"
+                                    class="h-2 rounded-full transition-all duration-300"></button>
                             @endforeach
 
+                        </div>
+
+                    @endif
+
+
+                    {{-- Slide counter --}}
+
+                    @if ($slides->count() > 1)
+                        <div
+                            class="absolute bottom-5 right-6 z-30 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                            <span x-text="banner + 1"></span>
+                            /
+                            {{ $slides->count() }}
                         </div>
                     @endif
 
                 </div>
+            @else
+                {{-- No banner --}}
+                <div class="flex h-[360px] items-center justify-center theme-inner sm:h-[400px]">
 
-                {{-- ================= BANNER IMAGE ================= --}}
-                <div class="theme-inner relative min-h-52 overflow-hidden md:col-span-3">
+                    <div class="text-center text-slate-600">
 
-                    @foreach ($slides as $k => $slide)
-                        @if ($slide->image)
-                            <div x-show="i === {{ $k }}"
-                                x-transition:enter="transition-opacity duration-500"
-                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                class="absolute inset-0 bg-right bg-no-repeat"
-                                style="
-                                background-image: url('{{ asset('storage/' . $slide->image) }}');
-                                background-size: 180% 102%;
-                                background-position: 95% 15%;
-                            ">
-                            </div>
-                        @else
-                            <div x-show="i === {{ $k }}"
-                                class="absolute inset-0 flex items-center justify-center">
-                                <x-heroicon-o-photo class="size-16 text-slate-700" />
-                            </div>
-                        @endif
-                    @endforeach
+                        <x-heroicon-o-photo class="mx-auto size-16" />
+
+                        <p class="mt-3 text-sm font-semibold">
+                            No active banners available
+                        </p>
+
+                    </div>
 
                 </div>
 
-            </div>
-        @else
-            {{-- No active banners --}}
-            <div class="flex min-h-80 items-center justify-center text-slate-600">
-                <div class="text-center">
-                    <x-heroicon-o-photo class="mx-auto size-16" />
-                    <p class="mt-3 text-sm font-semibold">
-                        No active banners available
-                    </p>
-                </div>
-            </div>
+            @endif
 
-        @endif
 
-    </section>
+            {{-- ================================================= --}}
+            {{-- REEL PROMOTION                                   --}}
+            {{-- ================================================= --}}
 
-    <section>
-        <div class="flex items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
-            <div>
-                <p class="theme-text text-[10px] font-bold uppercase tracking-[0.22em]">YourBrand</p>
-                <h2 class="mt-1 text-2xl font-black text-white">Your feed</h2>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('shop.index') }}"
-                    class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
-                    Shop
-                </a>
-                @auth
-                    <a href="{{ route('saved.index') }}"
-                        class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">Saved</a>
-                    <a href="{{ route('posts.create') }}"
-                        class="theme-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black">
-                        <x-heroicon-o-plus class="size-4" />
-                        <span>Create post</span>
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" class="theme-btn rounded-lg px-3 py-2 text-xs font-black">
-                        Join
-                    </a>
-                @endauth
-            </div>
-        </div>
+            @if ($trendingReels->isNotEmpty())
 
-        <div class="theme-card rounded-lg border border-slate-800/80 p-4 shadow-xl sm:p-5">
-            <div class="mb-3 flex items-center justify-between gap-3">
-                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-slate-300">Following</h3>
-                <span
-                    class="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $storyUsers->count() }}
-                    creators</span>
-            </div>
+                @php
+                    $heroReel = $trendingReels->first();
+                @endphp
 
-            <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
-                <div class="shrink-0">
-                    <livewire:story.create-story />
-                </div>
-                @foreach ($storyUsers as $sUser)
-                    @php
-                        $activeStory = $sUser->activeStories->first();
-                        $hasStory = $activeStory !== null;
+                <div class="border-t border-slate-800/80 bg-black/10 p-4 sm:p-5 lg:p-6">
 
-                        // Apne Story model ke viewer relation/logic ke according
-                        // is value ko set karna hoga.
-                        $hasViewed = $hasStory ? $activeStory->views->contains('user_id', auth()->id()) : false;
-                    @endphp
+                    {{-- Reel heading --}}
 
-                    <button type="button" wire:key="story-user-{{ $sUser->id }}"
-                        @if ($hasStory) wire:click="$dispatch('open-story', { storyId: {{ $activeStory->id }} })" @endif
-                        class="flex min-w-[72px] shrink-0 flex-col items-center gap-2 text-center">
+                    <div class="mb-4 flex items-center justify-between gap-3">
 
-                        <div @class([
-                            'relative size-16 rounded-full p-[3px]',
-                            'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600' =>
-                                $hasStory && !$hasViewed,
-                            'bg-slate-600' => $hasStory && $hasViewed,
-                            'bg-slate-800' => !$hasStory,
-                        ])>
+                        <div>
 
-                            <div
-                                class="h-full w-full overflow-hidden rounded-full border-2 border-slate-950 bg-slate-950">
+                            <p class="theme-text text-[10px] font-black uppercase tracking-[0.2em]">
+                                ReelMarket TV
+                            </p>
 
-                                @if (optional($sUser->profile)->profile_picture)
-                                    <img src="{{ asset('storage/' . $sUser->profile->profile_picture) }}"
-                                        alt="{{ $sUser->name }}" class="h-full w-full object-cover">
-                                @else
-                                    <span
-                                        class="flex h-full w-full items-center justify-center text-sm font-black uppercase text-white">
-                                        {{ Str::substr($sUser->name, 0, 1) }}
-                                    </span>
-                                @endif
+                            <h2 class="mt-1 text-lg font-black text-white sm:text-xl">
+                                Shop through reels
+                            </h2>
 
-                            </div>
+                            <p class="mt-1 text-xs text-slate-500">
+                                Watch creators. Discover products. Shop what you love.
+                            </p>
 
                         </div>
 
-                        <span class="max-w-[70px] truncate text-[11px] font-semibold text-slate-300">
-                            {{ Str::before($sUser->name, ' ') }}
-                        </span>
 
-                    </button>
-                @endforeach
-            </div>
+                        {{-- Reel navigation --}}
+
+                        @if ($trendingReels->count() > 1)
+                            <div class="flex items-center gap-2">
+
+                                <button type="button" @click="previousReel()" aria-label="Previous reel"
+                                    class="theme-inner flex size-9 items-center justify-center rounded-xl border border-slate-800 text-slate-300 transition hover:border-slate-600 hover:text-white">
+                                    <x-heroicon-o-chevron-left class="size-4" />
+                                </button>
+
+                                <button type="button" @click="nextReel()" aria-label="Next reel"
+                                    class="theme-inner flex size-9 items-center justify-center rounded-xl border border-slate-800 text-slate-300 transition hover:border-slate-600 hover:text-white">
+                                    <x-heroicon-o-chevron-right class="size-4" />
+                                </button>
+
+                            </div>
+                        @endif
+
+                    </div>
+
+
+                    {{-- ========================================= --}}
+                    {{-- REEL SLIDER                               --}}
+                    {{-- ========================================= --}}
+
+                    <div class="relative overflow-hidden">
+
+                        @foreach ($trendingReels as $rIndex => $reel)
+                            @php
+                                $reelUser = $reel->user;
+                                $reelProfile = $reelUser?->profile;
+                                $reelProduct = $reel->product;
+                                $reelProductImage = $reelProduct?->images?->first()?->image;
+
+                                $reelPrice = $reelProduct
+                                    ? (float) ($reelProduct->sale_price ?: $reelProduct->price)
+                                    : null;
+                            @endphp
+
+                            <div x-show="reel === {{ $rIndex }}"
+                                x-transition:enter="transition-opacity duration-300"
+                                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                class="grid gap-4 md:grid-cols-5">
+
+                                {{-- ================================= --}}
+                                {{-- REEL INFO                          --}}
+                                {{-- ================================= --}}
+
+                                <div
+                                    class="theme-inner flex min-w-0 flex-col justify-between rounded-2xl border border-slate-800/80 p-5 md:col-span-3">
+
+                                    <div>
+
+                                        {{-- Creator --}}
+
+                                        <div class="flex items-center gap-3">
+
+                                            <div
+                                                class="theme-soft-bg theme-text flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-700 text-xs font-black uppercase">
+
+                                                @if ($reelProfile?->profile_picture)
+                                                    <img src="{{ asset('storage/' . $reelProfile->profile_picture) }}"
+                                                        alt="{{ $reelUser?->name }}"
+                                                        class="h-full w-full object-cover">
+                                                @else
+                                                    {{ Str::substr($reelUser?->name ?? 'U', 0, 1) }}
+                                                @endif
+
+                                            </div>
+
+
+                                            <div class="min-w-0">
+
+                                                <p class="truncate text-sm font-black text-white">
+                                                    {{ $reelProfile?->username ?? $reelUser?->name }}
+                                                </p>
+
+                                                <p class="text-[11px] text-slate-500">
+                                                    Featured creator
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {{-- Reel title --}}
+
+                                        <h3
+                                            class="mt-5 line-clamp-2 text-xl font-black leading-tight text-white sm:text-2xl">
+                                            {{ $reel->caption ?? 'Discover something worth watching' }}
+                                        </h3>
+
+
+                                        {{-- Product --}}
+
+                                        @if ($reelProduct)
+                                            <div
+                                                class="theme-card mt-5 flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 p-3">
+
+                                                <div class="flex min-w-0 items-center gap-3">
+
+                                                    <div
+                                                        class="theme-inner flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+
+                                                        @if ($reelProductImage)
+                                                            <img src="{{ asset('storage/' . $reelProductImage) }}"
+                                                                alt="{{ $reelProduct->name }}"
+                                                                class="h-full w-full object-cover">
+                                                        @else
+                                                            <x-heroicon-o-shopping-bag class="size-5 text-slate-500" />
+                                                        @endif
+
+                                                    </div>
+
+
+                                                    <div class="min-w-0">
+
+                                                        <p class="truncate text-xs font-bold text-white">
+                                                            {{ $reelProduct->name }}
+                                                        </p>
+
+                                                        @if ($reelPrice !== null)
+                                                            <p class="mt-0.5 text-sm font-black theme-text">
+                                                                ₹{{ number_format($reelPrice, 0) }}
+                                                            </p>
+                                                        @endif
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <a href="{{ route('product.detail', $reelProduct->slug ?? $reelProduct->id) }}"
+                                                    class="theme-btn shrink-0 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-wide">
+                                                    Shop this reel
+                                                </a>
+
+                                            </div>
+                                        @endif
+
+                                    </div>
+
+
+                                    {{-- Reel buttons --}}
+
+                                    <div class="mt-5 flex flex-wrap gap-2">
+
+                                        <a href="{{ route('reels.index', ['reel' => $reel->id]) }}"
+                                            class="theme-btn inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black">
+                                            <x-heroicon-o-play class="size-4" />
+                                            Watch reel
+                                        </a>
+
+                                        <a href="{{ route('reels.index') }}"
+                                            class="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:border-slate-500 hover:text-white">
+                                            All reels
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+
+                                {{-- ================================= --}}
+                                {{-- REEL PREVIEW                       --}}
+                                {{-- ================================= --}}
+
+                                <a href="{{ route('reels.index', ['reel' => $reel->id]) }}"
+                                    class="group relative min-h-[280px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 md:col-span-2">
+
+                                    @if ($reel->thumbnail)
+                                        <img src="{{ asset('storage/' . $reel->thumbnail) }}"
+                                            alt="Reel by {{ $reelProfile?->username ?? $reelUser?->name }}"
+                                            class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                                    @else
+                                        <div class="absolute inset-0 flex items-center justify-center bg-slate-950">
+                                            <x-heroicon-o-video-camera class="size-12 text-slate-700" />
+                                        </div>
+                                    @endif
+
+
+                                    {{-- Preview overlay --}}
+
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/20">
+                                    </div>
+
+
+                                    {{-- Play button --}}
+
+                                    <span
+                                        class="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-xl transition group-hover:scale-110">
+                                        <x-heroicon-s-play class="ml-0.5 size-6" />
+                                    </span>
+
+
+                                    {{-- Creator name --}}
+
+                                    <div class="absolute inset-x-0 bottom-0 p-4">
+
+                                        <p class="truncate text-xs font-black text-white">
+                                            {{ $reelProfile?->username ?? $reelUser?->name }}
+                                        </p>
+
+                                        <p
+                                            class="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white/60">
+                                            Watch & shop
+                                        </p>
+
+                                    </div>
+
+                                </a>
+
+                            </div>
+                        @endforeach
+
+                    </div>
+
+
+                    {{-- Reel dots --}}
+
+                    @if ($trendingReels->count() > 1)
+
+                        <div class="mt-4 flex items-center justify-center gap-1.5">
+
+                            @foreach ($trendingReels as $rIndex => $reel)
+                                <button type="button" @click="reel = {{ $rIndex }}"
+                                    :class="reel === {{ $rIndex }} ?
+                                        'w-6 bg-(--accent-primary)' :
+                                        'w-1.5 bg-slate-700'"
+                                    class="h-1.5 rounded-full transition-all duration-300"
+                                    aria-label="Reel {{ $rIndex + 1 }}"></button>
+                            @endforeach
+
+                        </div>
+
+                    @endif
+
+                </div>
+            @else
+                {{-- ================================================ --}}
+                {{-- NO REELS: SIMPLE SOCIAL PROMOTION                 --}}
+                {{-- ================================================ --}}
+
+                <div
+                    class="flex flex-col gap-4 border-t border-slate-800/80 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+
+                    <div class="flex items-center gap-4">
+
+                        <div
+                            class="theme-soft-bg theme-text flex size-12 shrink-0 items-center justify-center rounded-full">
+                            <x-heroicon-o-users class="size-6" />
+                        </div>
+
+                        <div>
+
+                            <p class="text-sm font-black text-white">
+                                Join the community
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                Follow creators, watch stories and discover products.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <a href="{{ route('reels.index') }}"
+                        class="theme-btn inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black">
+                        Explore reels
+
+                        <x-heroicon-o-arrow-right class="size-4" />
+                    </a>
+
+                </div>
+
+            @endif
+
         </div>
+
     </section>
-
-
     {{-- ================= TRUST STRIP ================= --}}
     <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         @foreach ($trust as $item)
@@ -244,12 +555,12 @@
 
     {{-- ================= CATEGORIES ================= --}}
     @if ($categories->isNotEmpty())
-        <section>
+        <section class="theme-card rounded-2xl px-3 py-3">
             <div class="mb-3 flex items-center justify-between">
                 <h2 class="text-lg font-black text-white">Shop by category</h2>
                 <a href="{{ route('shop.index') }}" class="theme-text text-xs font-bold hover:underline">View all</a>
             </div>
-            <div class="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+            <div class="no-scrollbar theme-card flex items-center gap-3 rounded-2xl overflow-x-auto">
                 @foreach ($categories as $category)
                     <a href="{{ route('shop.index', ['selectedCategory' => $category->slug ?? $category->id]) }}"
                         wire:key="home-cat-{{ $category->id }}"
@@ -272,7 +583,7 @@
     @endif
 
     {{-- ================= MAIN GRID ================= --}}
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 theme-card rounded-2xl px-1 py-1">
 
         <div class="min-w-0 space-y-8 lg:col-span-8">
 
@@ -403,194 +714,6 @@
                 </section>
             @endif
 
-            {{-- ---------- Feed ---------- --}}
-            <section class="mx-auto w-full max-w-5xl space-y-5 md:space-y-6">
-                @forelse($posts as $post)
-                    @php
-                        $author = $post->user;
-                        $authorProfile = $author?->profile;
-                        $followStatus = $followStatuses[$post->user_id] ?? null;
-                        $isFollowing = $followStatus === 'accepted';
-                        $isFollowRequested = $followStatus === 'pending';
-                        $isLiked = auth()->check() && in_array($post->id, $likedPostIds, true);
-                        $isBookmarked = auth()->check() && in_array($post->id, $bookmarkedPostIds, true);
-                        $postImage = $post->image ?: $post->images?->first()?->image_path ?? null;
-                        $productImage = $post->product?->images?->first()?->image;
-                    @endphp
-
-                    <article id="post-{{ $post->id }}" wire:key="post-card-{{ $post->id }}"
-                        class="theme-card overflow-hidden rounded-lg border border-slate-800/80 shadow-xl">
-                        <div class="flex items-center justify-between gap-3 border-b border-slate-800/60 p-4">
-                            <div class="flex min-w-0 items-center gap-3">
-
-                                @if ($author?->activeStories?->isNotEmpty())
-                                    <button type="button"
-                                        wire:click="$dispatch('open-story', { storyId: {{ $author->activeStories->first()->id }} })"
-                                        class="relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-[2px] theme-btn"
-                                        aria-label="View {{ $author?->name }}'s story">
-                                        <div
-                                            class="flex size-full items-center justify-center overflow-hidden rounded-full bg-slate-950 text-sm font-black uppercase">
-                                            @if ($authorProfile?->profile_picture)
-                                                <img src="{{ asset('storage/' . $authorProfile->profile_picture) }}"
-                                                    alt="{{ $author?->name }}" class="h-full w-full object-cover" />
-                                            @else
-                                                {{ Str::substr($author?->name ?? 'U', 0, 2) }}
-                                            @endif
-                                        </div>
-                                    </button>
-                                @else
-                                    <a href="{{ route('users.show', $author) }}"
-                                        class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full theme-btn text-sm font-black uppercase">
-                                        @if ($authorProfile?->profile_picture)
-                                            <img src="{{ asset('storage/' . $authorProfile->profile_picture) }}"
-                                                alt="{{ $author?->name }}" class="h-full w-full object-cover" />
-                                        @else
-                                            {{ Str::substr($author?->name ?? 'U', 0, 2) }}
-                                        @endif
-                                    </a>
-                                @endif
-
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5">
-                                        <a href="{{ route('users.show', $author) }}"
-                                            class="truncate text-sm font-bold text-white">
-                                            {{ $authorProfile?->username ?? $author?->name }}
-                                        </a>
-
-                                        @if ($authorProfile?->is_verified)
-                                            <x-heroicon-s-check-circle class="size-4 theme-text" />
-                                        @endif
-                                    </div>
-
-                                    <p class="text-[11px] text-slate-400">
-                                        {{ $post->created_at->diffForHumans() }}
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            @if (auth()->check() && auth()->id() !== $post->user_id)
-                                <button wire:click="toggleFollow({{ $post->user_id }})" type="button"
-                                    class="rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition {{ $isFollowing || $isFollowRequested ? 'border-slate-700 bg-slate-900 text-slate-200' : 'theme-btn text-black' }}">
-                                    {{ $isFollowing ? 'Following' : ($isFollowRequested ? 'Requested' : 'Follow') }}
-                                </button>
-                            @endif
-                        </div>
-
-                        <div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-900">
-                            @if ($postImage)
-                                <img src="{{ asset('storage/' . $postImage) }}" alt="Post content"
-                                    class="h-full w-full object-cover" />
-                            @else
-                                <div
-                                    class="flex h-full w-full items-center justify-center text-sm font-bold uppercase tracking-[0.25em] text-slate-500">
-                                    Media
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="space-y-4 p-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <button wire:click="toggleLike({{ $post->id }})" type="button"
-                                        class="flex items-center gap-2 text-slate-200 transition hover:text-white">
-                                        @if ($isLiked)
-                                            <x-heroicon-s-heart class="size-6 text-rose-500" />
-                                        @else
-                                            <x-heroicon-o-heart class="size-6" />
-                                        @endif
-                                        <span class="text-xs font-bold">
-                                            {{ number_format(max((int) ($post->likes_count ?? 0), $post->likes->count())) }}
-                                        </span>
-                                    </button>
-
-                                    <button type="button" wire:click="openComments({{ $post->id }})"
-                                        class="flex items-center gap-2 text-slate-200 transition hover:text-white">
-                                        <x-heroicon-o-chat-bubble-left class="size-5" />
-                                        <span
-                                            class="text-xs font-bold">{{ max((int) ($post->comments_count ?? 0), $post->comments->count()) }}</span>
-                                    </button>
-                                </div>
-
-                                <div class="flex items-center gap-4">
-                                    @auth
-                                        @if ($post->user_id !== auth()->id())
-                                            <button type="button"
-                                                wire:click="$dispatch('open-report', { type: 'post', id: {{ $post->id }} })"
-                                                aria-label="Report post"
-                                                class="text-slate-400 transition hover:text-white">
-                                                <x-heroicon-o-flag class="size-5" />
-                                            </button>
-                                        @endif
-                                    @endauth
-                                    <button type="button" wire:click="toggleBookmark({{ $post->id }})"
-                                        aria-label="{{ $isBookmarked ? 'Remove saved post' : 'Save post' }}"
-                                        aria-pressed="{{ $isBookmarked ? 'true' : 'false' }}"
-                                        class="transition hover:text-white {{ $isBookmarked ? 'theme-text' : 'text-slate-300' }}">
-                                        @if ($isBookmarked)
-                                            <x-heroicon-s-bookmark class="size-5" />
-                                        @else
-                                            <x-heroicon-o-bookmark class="size-5" />
-                                        @endif
-                                    </button>
-                                </div>
-                            </div>
-
-                            @if ($post->content)
-                                <p class="text-sm leading-6 text-slate-300">
-                                    <span
-                                        class="mr-2 font-black text-white">{{ $authorProfile?->username ?? $author?->name }}</span>
-                                    {{ $post->content }}
-                                </p>
-                            @endif
-
-                            @if ($post->product)
-                                <div
-                                    class="theme-inner flex items-center justify-between gap-3 rounded-2xl border border-slate-800/80 p-3">
-                                    <div class="flex min-w-0 items-center gap-3">
-                                        <div
-                                            class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
-                                            @if ($productImage)
-                                                <img src="{{ asset('storage/' . $productImage) }}"
-                                                    alt="{{ $post->product->name }}"
-                                                    class="h-full w-full object-cover" />
-                                            @else
-                                                <span
-                                                    class="text-[10px] font-black uppercase text-slate-400">{{ Str::substr($post->product->name, 0, 2) }}</span>
-                                            @endif
-                                        </div>
-
-                                        <div class="min-w-0">
-                                            <p class="truncate text-xs font-bold text-white">
-                                                {{ $post->product->name }}</p>
-                                            <p class="text-[11px] font-bold theme-text">
-                                                ₹{{ number_format((float) ($post->product->sale_price ?? $post->product->price), 0) }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <a href="{{ route('product.detail', $post->product->slug ?? $post->product->id) }}"
-                                        class="theme-btn shrink-0 rounded-xl px-3.5 py-2 text-[11px] font-black uppercase tracking-wide">
-                                        Shop now
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
-                    </article>
-                @empty
-                    <div class="theme-card rounded-lg border border-slate-800/80 p-10 text-center shadow-xl">
-                        <p class="text-3xl">📸</p>
-                        <h3 class="mt-4 text-lg font-black text-white">No posts available</h3>
-                        <p class="mt-2 text-sm text-slate-400">Start following creators or check back later.</p>
-                    </div>
-                @endforelse
-
-                @if ($posts->hasPages())
-                    <div class="pb-6">
-                        {{ $posts->links() }}
-                    </div>
-                @endif
-            </section>
         </div>
 
         {{-- ================= RIGHT SIDEBAR ================= --}}
@@ -665,61 +788,9 @@
                         </a>
                     </div>
                 @endif
-
-                <div class="theme-card rounded-2xl border border-slate-800/80 p-4 shadow-xl">
-                    <livewire:follow-suggestions />
-                </div>
             </div>
         </aside>
     </div>
-
-    @if ($activeCommentsPostId)
-        @php $activePost = $posts->firstWhere('id', $activeCommentsPostId); @endphp
-        <div class="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Comments"
-            wire:keydown.escape.window="closeComments">
-            <div class="absolute inset-0 bg-black/60" wire:click="closeComments"></div>
-
-            <div
-                class="theme-card absolute inset-x-0 bottom-0 flex max-h-[70vh] flex-col rounded-t-2xl border-t border-slate-800/80 pb-[env(safe-area-inset-bottom)] md:inset-x-auto md:bottom-6 md:right-6 md:w-96 md:rounded-2xl md:border md:pb-0">
-                <header class="flex items-center justify-between border-b border-slate-800/80 px-4 py-3">
-                    <h2 class="text-sm font-black text-white">Comments</h2>
-                    <button type="button" wire:click="closeComments" aria-label="Close"
-                        class="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white">
-                        <x-heroicon-o-x-mark class="size-5" />
-                    </button>
-                </header>
-
-                <ul class="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-                    @forelse ($activePost?->comments ?? [] as $comment)
-                        <li class="flex items-start gap-2.5">
-                            <span
-                                class="theme-soft-bg flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white">
-                                {{ strtoupper(substr($comment->user->name, 0, 1)) }}
-                            </span>
-                            <p class="text-sm text-slate-200">
-                                <span class="font-bold text-white">{{ $comment->user->name }}</span>
-                                <span class="ml-1 text-slate-300">{{ $comment->content }}</span>
-                            </p>
-                        </li>
-                    @empty
-                        <li class="py-10 text-center text-xs text-slate-500">No comments yet. Be the first.</li>
-                    @endforelse
-                </ul>
-
-                <form wire:submit="postComment" class="flex items-center gap-2 border-t border-slate-800/80 p-3">
-                    <input wire:model="newComment" type="text" placeholder="Write a comment..."
-                        class="theme-inner min-w-0 flex-1 rounded-full border border-slate-700 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-(--accent-primary) focus:outline-none">
-                    <button type="submit" aria-label="Post comment"
-                        class="theme-btn flex size-10 shrink-0 items-center justify-center rounded-full">
-                        <x-heroicon-o-paper-airplane class="size-4" />
-                    </button>
-                </form>
-                @error('newComment')
-                    <p class="px-3 pb-2 text-xs text-rose-400">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
-    @endif
 
     <livewire:report-content />
     <livewire:story.story-viewer />

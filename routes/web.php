@@ -15,6 +15,8 @@ use App\Livewire\ProductDetailPage;
 use App\Livewire\ReelsPage;
 use App\Livewire\SavedContentPage;
 use App\Livewire\ShopPage;
+use App\Livewire\SocialFeed;
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeFeed::class)->name('home');
@@ -23,6 +25,8 @@ Route::get('/product/{slug}', ProductDetailPage::class)->name('product.detail');
 Route::get('/cart', CartPage::class)->name('cart.index');
 Route::get('/reels', ReelsPage::class)->name('reels.index');
 Route::get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
+Route::get('/social', SocialFeed::class)->name('social.index');
+
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

@@ -2,31 +2,28 @@
 
 namespace App\Livewire;
 
-use App\Models\Bookmark;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Post;
-use App\Models\Product;
 use App\Models\Reel;
 use App\Models\User;
-use App\Models\Banner;
+use App\Models\Bookmark;
 use App\Services\BookmarkService;
 use App\Services\FollowService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-class HomeFeed extends Component
+class SocialFeed extends Component
 {
+    public string $activeTab = 'for_you'; // for_you | following | reels | shop
+
     public array $likedPostIds = [];
-
     public array $bookmarkedPostIds = [];
-
     public array $followStatuses = [];
 
     public ?int $activeCommentsPostId = null;
-
     public string $newComment = '';
 
     public function mount(): void
@@ -52,13 +49,18 @@ class HomeFeed extends Component
         }
     }
 
+    public function setTab(string $tab): void
+    {
+        $this->activeTab = $tab;
+        $this->activeCommentsPostId = null;
+    }
+
     public function toggleFollow(int $userId, FollowService $followService): void
     {
         $currentUser = auth()->user();
 
         if (! $currentUser instanceof User) {
             $this->redirectRoute('login');
-
             return;
         }
 
@@ -82,7 +84,6 @@ class HomeFeed extends Component
 
         if (! $user) {
             $this->redirectRoute('login');
-
             return;
         }
 
@@ -113,7 +114,6 @@ class HomeFeed extends Component
 
         if (! $user instanceof User) {
             $this->redirectRoute('login');
-
             return;
         }
 
@@ -122,7 +122,6 @@ class HomeFeed extends Component
 
         if ($isBookmarked) {
             $this->bookmarkedPostIds[] = $post->id;
-
             return;
         }
 
@@ -148,13 +147,11 @@ class HomeFeed extends Component
 
         if (! $user instanceof User) {
             $this->dispatch('notify', type: 'info', message: 'Please log in to comment.');
-
             return;
         }
 
         if (! $this->activeCommentsPostId) {
             $this->addError('newComment', 'Choose a post before commenting.');
-
             return;
         }
 
@@ -178,116 +175,82 @@ class HomeFeed extends Component
         $currentUser = auth()->user();
         $viewer = $currentUser instanceof User ? $currentUser : null;
 
+        // ---------- Stories ----------
         $storyUsers = collect();
 
         if ($currentUser) {
-            $storyUsers = User::with([
-                'profile',
-                'activeStories',
-            ])
-            ->whereHas('followers', function ($query) use ($currentUser) {
-                $query->where('follower_id', $currentUser->id)
-                    ->where('follows.status', 'accepted');
-            })
-            ->whereHas('activeStories')
-            ->where('status', true)
-            ->withoutRole(['Admin', 'Super Admin'])
-            ->take(10)
-            ->get();
+            $storyUsers = User::with(['profile', 'activeStories'])
+                ->whereHas('followers', function ($query) use ($currentUser) {
+                    $query->where('follower_id', $currentUser->id)
+                        ->where('follows.status', 'accepted');
+                })
+                ->whereHas('activeStories')
+                ->where('status', true)
+                ->withoutRole(['Admin', 'Super Admin'])
+                ->take(15)
+                ->get();
         }
 
-        //dd($storyUsers);
-
-        $posts = Post::with([
-            'user.profile',
-            'user.activeStories',
-            'product',
-            'likes',
-            'images',
-            'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
-            'product.images',
-        ])
+        // ---------- Posts (feed tabs) ----------
+        $postsQuery = Post::with([
+                'user.profile',
+                'user.activeStories',
+                'product.images',
+                'images',
+                'likes',
+                'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
+            ])
             ->visibleTo($viewer)
-            ->whereHas('user', function ($query) {
-                $query->withoutRole(['Admin', 'Super Admin']);
-            })
-            ->when(
-                request()->integer('post') > 0,
-                fn ($query) => $query->whereKey(request()->integer('post'))
-            )
-            ->latest()
-            ->paginate(10);
+            ->whereHas('user', fn ($q) => $q->withoutRole(['Admin', 'Super Admin']));
 
-        // ---- Shop sections for the redesigned home page ----
+        if ($this->activeTab === 'following' && $currentUser) {
+            $followingIds = Follow::query()
+                ->where('follower_id', $currentUser->id)
+                ->where('status', 'accepted')
+                ->pluck('following_id');
 
-        $categories = Category::query()
-            ->active()
-            ->rootLevel()
-            ->orderBy('sort_order')
-            ->take(8)
-            ->get();
+            $postsQuery->whereIn('user_id', $followingIds);
+        } elseif ($this->activeTab === 'shop') {
+            $postsQuery->whereNotNull('product_id');
+        }
 
-        // Featured products first, then newest
-        $trendingProducts = Product::query()
-            ->active()
-            ->with(['images', 'variants', 'brand', 'category'])
-            ->orderByDesc('featured')
-            ->latest()
-            ->take(8)
-            ->get();
+        $posts = $postsQuery->latest()->paginate(10);
 
-        // Product with the biggest percentage discount
-        $dealProduct = Product::query()
-            ->active()
-            ->with(['images', 'variants'])
-            ->where('sale_price', '>', 0)
-            ->whereColumn('sale_price', '<', 'price')
-            ->orderByRaw('(price - sale_price) / price DESC')
-            ->first();
+        // ---------- Reels tab ----------
+        $reels = collect();
+        if ($this->activeTab === 'reels') {
+            $reels = Reel::query()
+                ->visibleTo($viewer)
+                ->with(['user.profile', 'product'])
+                ->latest()
+                ->take(8)
+                ->get();
+        }
 
+        // ---------- Sidebar: Trending reels ----------
         $trendingReels = Reel::query()
             ->visibleTo($viewer)
             ->with(['user.profile', 'product'])
             ->latest()
-            ->take(4)
-            ->get();
-
-        $slides = Banner::active()->get();
-
-        $newArrivals = Product::query()
-        ->active()
-        ->with(['images', 'variants', 'brand', 'category'])
-        ->latest()
-        ->take(4)
-        ->get();
-
-        // Hero reels — top 3 trending
-        $heroReels = Reel::query()
-            ->visibleTo($viewer)
-            ->with(['user.profile', 'product.images'])
-            ->latest()
             ->take(3)
             ->get();
 
-        // Hero ka main reel (right-most highlighted)
-        $heroReel = $heroReels->first();
+        // ---------- Sidebar: Categories ----------
+        $categories = Category::query()
+            ->active()
+            ->rootLevel()
+            ->orderBy('sort_order')
+            ->take(4)
+            ->get();
 
-        //dd($slides);
-
-        return view('livewire.home-feed', [
+        return view('livewire.social-feed', [
             'storyUsers' => $storyUsers,
             'posts' => $posts,
+            'reels' => $reels,
+            'trendingReels' => $trendingReels,
+            'categories' => $categories,
             'followStatuses' => $this->followStatuses,
             'bookmarkedPostIds' => $this->bookmarkedPostIds,
-            'categories' => $categories,
-            'trendingProducts' => $trendingProducts,
-            'dealProduct' => $dealProduct,
-            'dealEndsAtMs' => now()->endOfDay()->timestamp * 1000,
-            'trendingReels' => $trendingReels,
-            'slides' => $slides,
-            'newArrivals' => $newArrivals,
-            'heroReels' => $heroReels,
-            'heroReel' => $heroReel,
         ]);
     }
 }

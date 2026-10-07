@@ -10,6 +10,18 @@ use Livewire\Component;
 
 class FollowSuggestions extends Component
 {
+    public int $limit = 5;
+
+    // 🆕 Add this
+    public string $variant = 'list';
+
+    // 🆕 Update mount to accept variant
+    public function mount(int $limit = 5, string $variant = 'list'): void
+    {
+        $this->limit  = $limit;
+        $this->variant = $variant;
+    }
+
     public function toggleFollow(int $userId, FollowService $followService): void
     {
         $follower = auth()->user();
@@ -51,9 +63,8 @@ class FollowSuggestions extends Component
             })
             ->orderByDesc('accepted_followers_count')
             ->orderByDesc('id')
-            ->limit(10)
+            ->limit($this->limit)   // 🆕 was limit(10)
             ->get();
-
 
         $followStatuses = $viewer instanceof User
             ? Follow::query()
@@ -63,13 +74,13 @@ class FollowSuggestions extends Component
             : collect();
 
         $reverseFollowStatuses = $viewer instanceof User
-        ? Follow::query()
-            ->whereIn('follower_id', $suggestions->modelKeys())
-            ->where('following_id', $viewer->id)
-            ->where('status', 'accepted')
-            ->pluck('status', 'follower_id')
-            ->map(fn () => true)
-        : collect();
+            ? Follow::query()
+                ->whereIn('follower_id', $suggestions->modelKeys())
+                ->where('following_id', $viewer->id)
+                ->where('status', 'accepted')
+                ->pluck('status', 'follower_id')
+                ->map(fn () => true)
+            : collect();
 
         return view('livewire.follow-suggestions', [
             'suggestions' => $suggestions,

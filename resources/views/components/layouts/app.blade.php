@@ -20,10 +20,11 @@
     ][$bgTheme] ?? ['body' => '#0b0813', 'card' => '#140e26', 'inner' => '#1a1333'];
 
     // Desktop pill navigation (main pages)
-    $navLinks = [
-        ['route' => 'home',        'label' => 'Home',  'icon' => 'heroicon-o-home',         'active' => 'home'],
-        ['route' => 'shop.index',  'label' => 'Shop',  'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
-        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle',  'active' => 'reels.*'],
+   $navLinks = [
+        ['route' => 'home', 'label' => 'Home', 'icon' => 'heroicon-o-home', 'active' => 'home'],
+        ['route' => 'shop.index', 'label' => 'Shop', 'icon' => 'heroicon-o-shopping-bag', 'active' => 'shop.*'],
+        ['route' => 'reels.index', 'label' => 'Reels', 'icon' => 'heroicon-o-play-circle', 'active' => 'reels.*'],
+        ['route' => 'social.index', 'label' => 'Social', 'icon' => 'heroicon-o-users', 'active' => 'social.*'], // ← ADD
     ];
 @endphp
 
@@ -232,6 +233,14 @@
                     <x-heroicon-o-home class="size-6" />
                     <span class="text-[10px] leading-none {{ request()->routeIs('home') ? 'font-bold' : 'font-medium' }}">
                         Home
+                    </span>
+                </a>
+                <!-- Social -->
+                <a href="{{ route('social.index') }}" aria-label="Social"
+                    class="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 {{ request()->routeIs('social.*') ? 'theme-text' : 'text-slate-500' }}">
+                    <x-heroicon-o-users class="size-6" />
+                    <span class="text-[10px] leading-none {{ request()->routeIs('social.*') ? 'font-bold' : 'font-medium' }}">
+                        Social
                     </span>
                 </a>
                 <!-- Shop -->

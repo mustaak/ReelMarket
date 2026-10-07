@@ -15,6 +15,7 @@ use InvalidArgumentException;
 use IteratorAggregate;
 use stdClass;
 use Traversable;
+use ValueError;
 
 /**
  * @template TKey of array-key
@@ -890,9 +891,7 @@ class LazyCollection implements CanBeEscapedWhenCastToString, Enumerable
 
             foreach ($this as $key) {
                 if (! $values->valid()) {
-                    trigger_error($errorMessage, E_USER_WARNING);
-
-                    break;
+                    throw new ValueError($errorMessage);
                 }
 
                 yield $key => $values->current();
@@ -901,7 +900,7 @@ class LazyCollection implements CanBeEscapedWhenCastToString, Enumerable
             }
 
             if ($values->valid()) {
-                trigger_error($errorMessage, E_USER_WARNING);
+                throw new ValueError($errorMessage);
             }
         });
     }
@@ -1574,8 +1573,10 @@ class LazyCollection implements CanBeEscapedWhenCastToString, Enumerable
                     $position = ($position + 1) % $limit;
                 }
 
-                for ($i = 0, $end = min($limit, count($ringBuffer)); $i < $end; $i++) {
-                    $pointer = ($position + $i) % $limit;
+                $ringBufferCount = count($ringBuffer);
+
+                for ($i = 0, $end = min($limit, $ringBufferCount); $i < $end; $i++) {
+                    $pointer = $ringBufferCount < $limit ? $i : ($position + $i) % $limit;
                     yield $ringBuffer[$pointer][0] => $ringBuffer[$pointer][1];
                 }
             });

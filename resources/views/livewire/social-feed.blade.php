@@ -335,8 +335,9 @@
             <div class="sticky top-36 space-y-5">
 
                 {{-- ---------- SUGGESTED FOR YOU ---------- --}}
-                <livewire:follow-suggestions :limit="5" variant="list" />
-
+                <div class="theme-card rounded-2xl border border-slate-800/80 p-4 shadow-xl">
+                    <livewire:follow-suggestions :limit="5" variant="list" />
+                </div>
                 {{-- ---------- TRENDING REELS ---------- --}}
                 @if ($trendingReels->isNotEmpty())
                     <div class="theme-card rounded-2xl border border-slate-800/80 p-4 shadow-xl">

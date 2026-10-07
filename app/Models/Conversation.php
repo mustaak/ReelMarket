@@ -9,20 +9,27 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
-    protected $fillable = ['direct_pair_key'];
+    protected $fillable = [
+        'direct_pair_key',
+    ];
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'conversation_user');
+        return $this->belongsToMany(
+            User::class,
+            'conversation_user'
+        )->withPivot('accepted_at');
     }
 
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class)->latest();
+        return $this->hasMany(Message::class)
+            ->latest();
     }
 
     public function latestMessage(): HasOne
     {
-        return $this->hasOne(Message::class)->latestOfMany();
+        return $this->hasOne(Message::class)
+            ->latestOfMany();
     }
 }

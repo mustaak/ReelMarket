@@ -80,7 +80,7 @@
                                 wire:loading.attr="disabled"
                                 wire:target="toggleFollow({{ $suggestion->id }})"
                                 aria-label="{{ $buttonLabel }} {{ $suggestion->name }}"
-                                class="w-full rounded-lg py-1.5 text-[11px] font-bold transition disabled:opacity-50
+                                class="cursor-pointer w-full rounded-lg py-1.5 text-[11px] font-bold transition disabled:opacity-50
                                     {{ $isFollowing
                                         ? 'border border-slate-700 text-slate-300'
                                         : 'theme-btn text-black' }}">
@@ -88,7 +88,7 @@
                             </button>
                         @else
                             <a href="{{ route('login') }}"
-                                class="theme-btn w-full rounded-lg py-1.5 text-[11px] font-bold text-black">
+                                class="theme-btn w-full rounded-lg py-1.5 text-[11px] font-bold text-black cursor-pointer">
                                 Follow
                             </a>
                         @endauth
@@ -180,7 +180,7 @@
                                 wire:loading.attr="disabled"
                                 wire:target="toggleFollow({{ $suggestion->id }})"
                                 aria-label="{{ $buttonLabel }} {{ $suggestion->name }}"
-                                class="shrink-0 text-[12px] font-bold transition disabled:opacity-50
+                                class="cursor-pointer shrink-0 text-[12px] font-bold transition disabled:opacity-50
                                     {{ $isFollowing
                                         ? 'text-slate-400 hover:text-white'
                                         : 'text-(--accent-text) hover:text-(--accent-primary)' }}">
@@ -188,7 +188,7 @@
                             </button>
                         @else
                             <a href="{{ route('login') }}"
-                                class="shrink-0 text-[12px] font-bold text-(--accent-text) hover:text-(--accent-primary)">
+                                class="shrink-0 text-[12px] font-bold text-(--accent-text) hover:text-(--accent-primary) cursor-pointer">
                                 Follow
                             </a>
                         @endauth

@@ -1,42 +1,178 @@
 <div class="mx-auto w-full max-w-7xl space-y-5 md:space-y-6">
-    <section class="theme-card overflow-hidden rounded-[28px] border border-slate-800/80 shadow-2xl">
-        <div class="flex flex-col gap-4 p-4 sm:p-5 md:p-6">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Shop</p>
-                    <h1 class="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">Curated essentials for every day</h1>
+   <section
+        class="theme-card overflow-hidden rounded-[28px] border border-slate-800/80 shadow-2xl">
+
+        <div class="p-4 sm:p-5 md:p-6">
+
+            {{-- TOP HEADER --}}
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+                <div class="min-w-0">
+
+                    <p class="text-[10px] font-black uppercase tracking-[0.22em] text-(--accent-text)">
+                        Shop
+                    </p>
+
+                    <h1 class="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                        All Products
+                    </h1>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        Discover products picked for everyday shopping.
+                    </p>
+
                 </div>
 
-                <button type="button" onclick="Livewire.dispatch('open-cart')" class="theme-btn inline-flex items-center justify-center gap-2 self-start rounded-full px-4 py-2.5 text-xs font-black uppercase tracking-wide md:self-auto">
+
+                {{-- CART --}}
+                <button
+                    type="button"
+                    onclick="Livewire.dispatch('open-cart')"
+                    class="theme-btn inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-xs font-black uppercase tracking-wide">
+
                     <x-heroicon-o-shopping-cart class="size-4" />
-                    Cart
-                    <span class="rounded-full bg-black/10 px-1.5 py-0.5 text-[10px] font-black text-black"><livewire:cart-count /></span>
+
+                    <span>Cart</span>
+
+                    <span class="rounded-full bg-black/15 px-2 py-0.5 text-[10px] font-black">
+                        <livewire:cart-count />
+                    </span>
+
                 </button>
+
             </div>
 
-            <div class="relative">
-                <input wire:model.live.debounce.300ms="search"
+
+            {{-- ================================================= --}}
+            {{-- SEARCH                                             --}}
+            {{-- ================================================= --}}
+
+            <div class="relative mt-5">
+
+                <input
+                    wire:model.live.debounce.300ms="search"
                     type="text"
                     placeholder="Search products, brands, SKU..."
-                    class="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-(--accent-primary) focus:outline-none" />
-                <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                    class="w-full rounded-2xl border border-slate-800 bg-slate-950/70 py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-(--accent-primary) focus:ring-1 focus:ring-(--accent-primary)/30"
+                />
+
+                <x-heroicon-o-magnifying-glass
+                    class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500"
+                />
+
             </div>
 
-            <div class="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                <button wire:click="$set('selectedCategory', 'All')"
-                    class="shrink-0 rounded-full px-3.5 py-2 text-[11px] font-black uppercase tracking-wide transition {{ $selectedCategory === 'All' ? 'theme-btn text-black shadow-lg' : 'border border-slate-800 bg-slate-950/60 text-slate-300 hover:text-white' }}">
-                    All products
-                </button>
 
-                @foreach($categories as $category)
-                    @php $categoryKey = $category->slug ?? $category->id; @endphp
-                    <button wire:click="$set('selectedCategory', '{{ $categoryKey }}')"
-                        class="shrink-0 rounded-full px-3.5 py-2 text-[11px] font-black uppercase tracking-wide transition {{ $selectedCategory == $categoryKey ? 'theme-btn text-black shadow-lg' : 'border border-slate-800 bg-slate-950/60 text-slate-300 hover:text-white' }}">
-                        {{ $category->name }}
+            {{-- ================================================= --}}
+            {{-- CATEGORIES                                         --}}
+            {{-- ================================================= --}}
+
+            <div class="mt-5">
+
+                <div class="mb-2.5 flex items-center justify-between">
+
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                        Categories
+                    </span>
+
+                    @if($selectedCategory !== 'All')
+
+                        <button
+                            type="button"
+                            wire:click="$set('selectedCategory', 'All')"
+                            class="text-[10px] font-bold text-(--accent-text) transition hover:underline">
+
+                            Clear
+
+                        </button>
+
+                    @endif
+
+                </div>
+
+
+                {{-- CATEGORY SCROLLER --}}
+                <div class="relative">
+
+                    {{-- LEFT SCROLL --}}
+                    <button
+                        type="button"
+                        onclick="document.getElementById('category-scroll').scrollBy({ left: -280, behavior: 'smooth' })"
+                        aria-label="Scroll categories left"
+                        class="absolute left-0 top-1/2 z-20 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-700 bg-slate-950/95 text-white shadow-xl backdrop-blur transition hover:border-(--accent-primary) hover:text-(--accent-text)">
+
+                        <x-heroicon-o-chevron-left class="size-4" />
+
                     </button>
-                @endforeach
+
+
+                    {{-- CATEGORY LIST --}}
+                    <div
+                        id="category-scroll"
+                        class="no-scrollbar flex gap-2 overflow-x-auto scroll-smooth px-11 py-1">
+
+                        {{-- ALL --}}
+                        <button
+                            type="button"
+                            wire:click="$set('selectedCategory', 'All')"
+                            class="flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-wide transition
+                            {{ $selectedCategory === 'All'
+                                ? 'theme-btn border-transparent text-black shadow-lg'
+                                : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:border-slate-700 hover:text-white' }}">
+
+                            <x-heroicon-o-squares-2x2 class="size-3.5" />
+
+                            All products
+
+                        </button>
+
+
+                        {{-- CATEGORY ITEMS --}}
+                        @foreach($categories as $category)
+
+                            @php
+                                $categoryKey = $category->slug ?? $category->id;
+                                $active = $selectedCategory == $categoryKey;
+                            @endphp
+
+                            <button
+                                type="button"
+                                wire:click="$set('selectedCategory', '{{ $categoryKey }}')"
+                                class="flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-wide transition
+                                {{ $active
+                                    ? 'theme-btn border-transparent text-black shadow-lg'
+                                    : 'border-slate-800 bg-slate-950/70 text-slate-400 hover:border-slate-700 hover:text-white' }}">
+
+                                <span
+                                    class="size-1.5 rounded-full {{ $active ? 'bg-black/50' : 'bg-slate-600' }}">
+                                </span>
+
+                                {{ $category->name }}
+
+                            </button>
+
+                        @endforeach
+
+                    </div>
+
+
+                    {{-- RIGHT SCROLL --}}
+                    <button
+                        type="button"
+                        onclick="document.getElementById('category-scroll').scrollBy({ left: 280, behavior: 'smooth' })"
+                        aria-label="Scroll categories right"
+                        class="absolute right-0 top-1/2 z-20 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-700 bg-slate-950/95 text-white shadow-xl backdrop-blur transition hover:border-(--accent-primary) hover:text-(--accent-text)">
+
+                        <x-heroicon-o-chevron-right class="size-4" />
+
+                    </button>
+
+                </div>
+
             </div>
+
         </div>
+
     </section>
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">

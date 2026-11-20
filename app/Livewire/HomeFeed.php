@@ -2,18 +2,17 @@
 
 namespace App\Livewire;
 
-use App\Models\Bookmark;
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Comment;
-use App\Models\Follow;
 use App\Models\Like;
 use App\Models\Post;
 use App\Models\Product;
 use App\Models\Reel;
 use App\Models\User;
-use App\Models\Banner;
 use App\Services\BookmarkService;
 use App\Services\FollowService;
+use App\Services\ProductCatalogCache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -29,27 +28,11 @@ class HomeFeed extends Component
 
     public string $newComment = '';
 
-    public function mount(): void
+    protected ProductCatalogCache $productCatalogCache;
+
+    public function boot(ProductCatalogCache $productCatalogCache): void
     {
-        if (auth()->check()) {
-            $this->likedPostIds = Like::query()
-                ->where('user_id', auth()->id())
-                ->where('likeable_type', Post::class)
-                ->pluck('likeable_id')
-                ->all();
-
-            $this->bookmarkedPostIds = Bookmark::query()
-                ->where('user_id', auth()->id())
-                ->where('bookmarkable_type', Post::class)
-                ->pluck('bookmarkable_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            $this->followStatuses = Follow::query()
-                ->where('follower_id', auth()->id())
-                ->pluck('status', 'following_id')
-                ->all();
-        }
+        $this->productCatalogCache = $productCatalogCache;
     }
 
     public function toggleFollow(int $userId, FollowService $followService): void
@@ -185,38 +168,18 @@ class HomeFeed extends Component
                 'profile',
                 'activeStories',
             ])
-            ->whereHas('followers', function ($query) use ($currentUser) {
-                $query->where('follower_id', $currentUser->id)
-                    ->where('follows.status', 'accepted');
-            })
-            ->whereHas('activeStories')
-            ->where('status', true)
-            ->withoutRole(['Admin', 'Super Admin'])
-            ->take(10)
-            ->get();
+                ->whereHas('followers', function ($query) use ($currentUser) {
+                    $query->where('follower_id', $currentUser->id)
+                        ->where('follows.status', 'accepted');
+                })
+                ->whereHas('activeStories')
+                ->where('status', true)
+                ->withoutRole(['Admin', 'Super Admin'])
+                ->take(10)
+                ->get();
         }
 
-        //dd($storyUsers);
-
-        $posts = Post::with([
-            'user.profile',
-            'user.activeStories',
-            'product',
-            'likes',
-            'images',
-            'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
-            'product.images',
-        ])
-            ->visibleTo($viewer)
-            ->whereHas('user', function ($query) {
-                $query->withoutRole(['Admin', 'Super Admin']);
-            })
-            ->when(
-                request()->integer('post') > 0,
-                fn ($query) => $query->whereKey(request()->integer('post'))
-            )
-            ->latest()
-            ->paginate(10);
+        // dd($storyUsers);
 
         // ---- Shop sections for the redesigned home page ----
 
@@ -228,22 +191,41 @@ class HomeFeed extends Component
             ->get();
 
         // Featured products first, then newest
-        $trendingProducts = Product::query()
-            ->active()
+        $trendingProductIds = $this->productCatalogCache->remember(
+            'home:trending-products',
+            fn () => Product::query()
+                ->active()
+                ->orderByDesc('featured')
+                ->latest()
+                ->take(8)
+                ->pluck('id')
+                ->all(),
+        );
+        $trendingProductsById = Product::active()
             ->with(['images', 'variants', 'brand', 'category'])
-            ->orderByDesc('featured')
-            ->latest()
-            ->take(8)
-            ->get();
+            ->whereKey($trendingProductIds)
+            ->get()
+            ->keyBy('id');
+        $trendingProducts = collect($trendingProductIds)
+            ->map(fn ($productId) => $trendingProductsById->get($productId))
+            ->filter()
+            ->values();
 
         // Product with the biggest percentage discount
-        $dealProduct = Product::query()
-            ->active()
-            ->with(['images', 'variants'])
-            ->where('sale_price', '>', 0)
-            ->whereColumn('sale_price', '<', 'price')
-            ->orderByRaw('(price - sale_price) / price DESC')
-            ->first();
+        $dealProductData = $this->productCatalogCache->remember(
+            'home:deal-product',
+            fn () => [
+                'id' => Product::query()
+                    ->active()
+                    ->where('sale_price', '>', 0)
+                    ->whereColumn('sale_price', '<', 'price')
+                    ->orderByRaw('(price - sale_price) / price DESC')
+                    ->value('id'),
+            ],
+        );
+        $dealProduct = $dealProductData['id'] === null
+            ? null
+            : Product::active()->with(['images', 'variants'])->find($dealProductData['id']);
 
         $trendingReels = Reel::query()
             ->visibleTo($viewer)
@@ -254,12 +236,24 @@ class HomeFeed extends Component
 
         $slides = Banner::active()->get();
 
-        $newArrivals = Product::query()
-        ->active()
-        ->with(['images', 'variants', 'brand', 'category'])
-        ->latest()
-        ->take(4)
-        ->get();
+        $newArrivalIds = $this->productCatalogCache->remember(
+            'home:new-arrivals',
+            fn () => Product::query()
+                ->active()
+                ->latest()
+                ->take(4)
+                ->pluck('id')
+                ->all(),
+        );
+        $newArrivalsById = Product::active()
+            ->with(['images', 'variants', 'brand', 'category'])
+            ->whereKey($newArrivalIds)
+            ->get()
+            ->keyBy('id');
+        $newArrivals = collect($newArrivalIds)
+            ->map(fn ($productId) => $newArrivalsById->get($productId))
+            ->filter()
+            ->values();
 
         // Hero reels — top 3 trending
         $heroReels = Reel::query()
@@ -272,13 +266,10 @@ class HomeFeed extends Component
         // Hero ka main reel (right-most highlighted)
         $heroReel = $heroReels->first();
 
-        //dd($slides);
+        // dd($slides);
 
         return view('livewire.home-feed', [
             'storyUsers' => $storyUsers,
-            'posts' => $posts,
-            'followStatuses' => $this->followStatuses,
-            'bookmarkedPostIds' => $this->bookmarkedPostIds,
             'categories' => $categories,
             'trendingProducts' => $trendingProducts,
             'dealProduct' => $dealProduct,

@@ -2,35 +2,59 @@
 
 namespace App\Livewire;
 
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class ThemeSwitcher extends Component
 {
-    public $activeTheme = 'amber';
-    public $activeBg = 'midnight';
+    public string $activeTheme = 'amber';
 
-    public function mount()
+    public string $activeBg = 'midnight';
+
+    public function mount(): void
     {
         $this->activeTheme = session('user_theme', 'amber');
         $this->activeBg = session('user_bg', 'midnight');
     }
 
-    public function setTheme($color)
+    public function setTheme(string $color): void
     {
+        abort_unless(
+            in_array($color, ['amber', 'rose', 'emerald', 'indigo', 'cyan', 'purple', 'orange'], true),
+            404,
+        );
+
         $this->activeTheme = $color;
         session(['user_theme' => $color]);
-        return redirect(request()->header('Referer'));
+
+        $this->redirect($this->themeRedirectUrl());
     }
 
-    public function setBg($bg)
+    public function setBg(string $bg): void
     {
+        abort_unless(
+            in_array($bg, ['midnight', 'black', 'gray', 'navy', 'slate'], true),
+            404,
+        );
+
         $this->activeBg = $bg;
         session(['user_bg' => $bg]);
-        return redirect(request()->header('Referer'));
+
+        $this->redirect($this->themeRedirectUrl());
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.theme-switcher');
+    }
+
+    private function themeRedirectUrl(): string
+    {
+        $referer = request()->header('Referer');
+
+        return is_string($referer)
+            && parse_url($referer, PHP_URL_HOST) === request()->getHost()
+            ? $referer
+            : route('home');
     }
 }

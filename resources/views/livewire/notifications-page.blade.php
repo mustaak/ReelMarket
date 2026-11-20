@@ -1,7 +1,7 @@
 <main wire:poll.15s class="mx-auto w-full max-w-3xl space-y-6 pb-10">
     <header class="flex items-end justify-between gap-4 border-b border-slate-800/80 pb-4">
         <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] theme-text">YourBrand</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] theme-text">ReelMarket</p>
             <h1 class="mt-1 font-display text-2xl font-semibold text-white">Activity</h1>
         </div>
         @if($unreadCount > 0)
@@ -23,7 +23,7 @@
                 ])>
                     <span class="theme-soft-bg theme-text relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold">
                         @if($actorPhoto)
-                            <img src="{{ asset('storage/' . $actorPhoto) }}" alt="" class="size-full object-cover">
+                            <img src="{{ asset('storage/' . $actorPhoto) }}" alt="" loading="lazy" decoding="async" class="size-full object-cover">
                         @else
                             {{ strtoupper(substr($actorName, 0, 1)) }}
                         @endif

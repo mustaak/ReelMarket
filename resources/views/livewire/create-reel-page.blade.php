@@ -1,7 +1,7 @@
 <main class="mx-auto w-full max-w-6xl space-y-6 pb-10 theme-card p-6">
     <header class="flex items-end justify-between gap-4 border-b border-slate-800/80 pb-4">
         <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] theme-text">YourBrand</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] theme-text">ReelMarket</p>
             <h1 class="mt-1 font-display text-2xl font-semibold text-white">Create a reel</h1>
         </div>
         <a href="{{ route('reels.index') }}" class="text-xs font-semibold text-slate-400 transition hover:text-white">Cancel</a>

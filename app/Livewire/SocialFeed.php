@@ -9,7 +9,6 @@ use App\Models\Like;
 use App\Models\Post;
 use App\Models\Reel;
 use App\Models\User;
-use App\Models\Bookmark;
 use App\Services\BookmarkService;
 use App\Services\FollowService;
 use Livewire\Attributes\Layout;
@@ -19,35 +18,11 @@ class SocialFeed extends Component
 {
     public string $activeTab = 'for_you'; // for_you | following | reels | shop
 
-    public array $likedPostIds = [];
-    public array $bookmarkedPostIds = [];
     public array $followStatuses = [];
 
     public ?int $activeCommentsPostId = null;
+
     public string $newComment = '';
-
-    public function mount(): void
-    {
-        if (auth()->check()) {
-            $this->likedPostIds = Like::query()
-                ->where('user_id', auth()->id())
-                ->where('likeable_type', Post::class)
-                ->pluck('likeable_id')
-                ->all();
-
-            $this->bookmarkedPostIds = Bookmark::query()
-                ->where('user_id', auth()->id())
-                ->where('bookmarkable_type', Post::class)
-                ->pluck('bookmarkable_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            $this->followStatuses = Follow::query()
-                ->where('follower_id', auth()->id())
-                ->pluck('status', 'following_id')
-                ->all();
-        }
-    }
 
     public function setTab(string $tab): void
     {
@@ -61,6 +36,7 @@ class SocialFeed extends Component
 
         if (! $currentUser instanceof User) {
             $this->redirectRoute('login');
+
             return;
         }
 
@@ -84,6 +60,7 @@ class SocialFeed extends Component
 
         if (! $user) {
             $this->redirectRoute('login');
+
             return;
         }
 
@@ -97,14 +74,12 @@ class SocialFeed extends Component
 
         if ($existing) {
             $existing->delete();
-            $this->likedPostIds = array_values(array_diff($this->likedPostIds, [$postId]));
         } else {
             Like::create([
                 'likeable_type' => Post::class,
                 'likeable_id' => $post->id,
                 'user_id' => $user->id,
             ]);
-            $this->likedPostIds[] = (int) $postId;
         }
     }
 
@@ -114,18 +89,12 @@ class SocialFeed extends Component
 
         if (! $user instanceof User) {
             $this->redirectRoute('login');
+
             return;
         }
 
         $post = Post::visibleTo($user)->findOrFail($postId);
-        $isBookmarked = $bookmarkService->toggle($user, $post);
-
-        if ($isBookmarked) {
-            $this->bookmarkedPostIds[] = $post->id;
-            return;
-        }
-
-        $this->bookmarkedPostIds = array_values(array_diff($this->bookmarkedPostIds, [$post->id]));
+        $bookmarkService->toggle($user, $post);
     }
 
     public function openComments(int $postId): void
@@ -147,11 +116,13 @@ class SocialFeed extends Component
 
         if (! $user instanceof User) {
             $this->dispatch('notify', type: 'info', message: 'Please log in to comment.');
+
             return;
         }
 
         if (! $this->activeCommentsPostId) {
             $this->addError('newComment', 'Choose a post before commenting.');
+
             return;
         }
 
@@ -193,28 +164,40 @@ class SocialFeed extends Component
 
         // ---------- Posts (feed tabs) ----------
         $postsQuery = Post::with([
-                'user.profile',
-                'user.activeStories',
-                'product.images',
-                'images',
-                'likes',
-                'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
-            ])
+            'user.profile',
+            'user.activeStories',
+            'product.images',
+            'images',
+            'comments' => fn ($q) => $q->latest()->limit(10)->with('user:id,name'),
+        ])
+            ->withCount(['likes as actual_likes_count'])
             ->visibleTo($viewer)
             ->whereHas('user', fn ($q) => $q->withoutRole(['Admin', 'Super Admin']));
 
-        if ($this->activeTab === 'following' && $currentUser) {
-            $followingIds = Follow::query()
-                ->where('follower_id', $currentUser->id)
-                ->where('status', 'accepted')
-                ->pluck('following_id');
+        if ($viewer) {
+            $postsQuery->withExists([
+                'likes as is_liked_by_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
+                'bookmarks as is_bookmarked_by_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
+            ]);
+        }
 
-            $postsQuery->whereIn('user_id', $followingIds);
+        if ($this->activeTab === 'following' && $currentUser) {
+            $postsQuery->whereHas('user.followers', function ($query) use ($currentUser) {
+                $query->where('follower_id', $currentUser->id)
+                    ->where('follows.status', 'accepted');
+            });
         } elseif ($this->activeTab === 'shop') {
             $postsQuery->whereNotNull('product_id');
         }
 
         $posts = $postsQuery->latest()->paginate(10);
+        $this->followStatuses = $currentUser
+            ? Follow::query()
+                ->where('follower_id', $currentUser->id)
+                ->whereIn('following_id', $posts->getCollection()->pluck('user_id')->unique())
+                ->pluck('status', 'following_id')
+                ->all()
+            : [];
 
         // ---------- Reels tab ----------
         $reels = collect();
@@ -250,7 +233,6 @@ class SocialFeed extends Component
             'trendingReels' => $trendingReels,
             'categories' => $categories,
             'followStatuses' => $this->followStatuses,
-            'bookmarkedPostIds' => $this->bookmarkedPostIds,
         ]);
     }
 }

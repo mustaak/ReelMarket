@@ -381,6 +381,8 @@
                                                 <img
                                                     src="{{ asset('storage/' . $viewer['profile_picture']) }}"
                                                     alt="{{ $viewer['name'] }}"
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     class="h-full w-full object-cover"
                                                 >
 

@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Story;
-use App\Models\StoryView;
 
 #[Fillable(['name', 'email', 'password', 'status', 'type'])]
 #[Hidden(['password', 'remember_token'])]
@@ -139,5 +137,14 @@ class User extends Authenticatable
         return $this->acceptedFollowing()
             ->whereKey($user->id)
             ->exists();
+    }
+
+    public function activeNote(): ?string
+    {
+        return $this->note
+            && $this->note_expires_at
+            && Carbon::parse($this->note_expires_at)->isFuture()
+                ? $this->note
+                : null;
     }
 }

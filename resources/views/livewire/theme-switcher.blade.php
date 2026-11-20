@@ -1,4 +1,4 @@
-<div x-data="{ open: false }">
+<div x-data="{ open: false }" class="editorial-theme-customizer">
     
     <!-- Header Icon Button -->
     <button @click="open = true; document.body.classList.add('overflow-hidden')" 
@@ -41,7 +41,7 @@
                             <x-heroicon-o-swatch class="size-5 theme-text" />
                             Theme Customizer
                         </h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Select accent color & background mode</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Choose an accent and a soft page tone</p>
                     </div>
                     
                     <button @click="open = false; document.body.classList.remove('overflow-hidden')" 
@@ -109,31 +109,37 @@
 
                 <!-- 2. BACKGROUND MODES GRID -->
                 <div class="space-y-2.5">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Background Mode</span>
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Page tone</span>
                     
                     <div class="grid grid-cols-2 gap-2">
                         <button wire:click="setBg('midnight')" 
-                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'midnight' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 bg-[#0b0813] text-slate-400 hover:border-slate-700' }}">
-                            <span>Midnight</span>
-                            <span class="size-2.5 rounded-full bg-[#0b0813] border border-slate-700"></span>
+                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'midnight' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 theme-inner text-slate-400 hover:border-slate-700' }}">
+                            <span>Warm paper</span>
+                            <span class="size-2.5 rounded-full bg-[#f6f3ec] border border-slate-700"></span>
                         </button>
 
                         <button wire:click="setBg('black')" 
-                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'black' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 bg-[#050505] text-slate-400 hover:border-slate-700' }}">
-                            <span>Obsidian</span>
-                            <span class="size-2.5 rounded-full bg-[#050505] border border-slate-700"></span>
+                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'black' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 theme-inner text-slate-400 hover:border-slate-700' }}">
+                            <span>Black</span>
+                            <span class="size-2.5 rounded-full bg-[#090909] border border-slate-700"></span>
+                        </button>
+
+                        <button wire:click="setBg('gray')"
+                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'gray' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 theme-inner text-slate-400 hover:border-slate-700' }}">
+                            <span>Gray</span>
+                            <span class="size-2.5 rounded-full bg-[#303034] border border-slate-700"></span>
                         </button>
 
                         <button wire:click="setBg('navy')" 
-                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'navy' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 bg-[#060a12] text-slate-400 hover:border-slate-700' }}">
-                            <span>Navy</span>
-                            <span class="size-2.5 rounded-full bg-[#060a12] border border-slate-700"></span>
+                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'navy' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 theme-inner text-slate-400 hover:border-slate-700' }}">
+                            <span>Cool mist</span>
+                            <span class="size-2.5 rounded-full bg-[#f1f5f4] border border-slate-700"></span>
                         </button>
 
                         <button wire:click="setBg('slate')" 
-                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'slate' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 bg-[#0f172a] text-slate-400 hover:border-slate-700' }}">
-                            <span>Dark Slate</span>
-                            <span class="size-2.5 rounded-full bg-[#0f172a] border border-slate-700"></span>
+                                class="p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition {{ $activeBg === 'slate' ? 'border-amber-500/60 theme-inner theme-text' : 'border-slate-800 theme-inner text-slate-400 hover:border-slate-700' }}">
+                            <span>Soft stone</span>
+                            <span class="size-2.5 rounded-full bg-[#f2f2ef] border border-slate-700"></span>
                         </button>
                     </div>
                 </div>

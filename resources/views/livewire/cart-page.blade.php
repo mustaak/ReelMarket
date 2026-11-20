@@ -23,7 +23,7 @@
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div class="flex min-w-0 items-center gap-4">
                                 <a href="{{ route('product.detail', $item['slug'] ?? $item['id']) }}" class="block flex-shrink-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-                                    <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}" class="h-24 w-24 object-cover sm:h-28 sm:w-28" />
+                                    <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}" loading="lazy" decoding="async" class="h-24 w-24 object-cover sm:h-28 sm:w-28" />
                                 </a>
 
                                 <div class="min-w-0 flex-1">
@@ -78,7 +78,7 @@
                                 <div wire:key="lowest-{{ $product->id }}" class="theme-inner rounded-2xl border border-slate-800/80 p-3">
                                     <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
                                         @if($product->images->first()?->image)
-                                            <img src="{{ asset('storage/' . $product->images->first()->image) }}" alt="{{ $product->name }}" class="h-28 w-full object-cover">
+                                            <img src="{{ asset('storage/' . $product->images->first()->image) }}" alt="{{ $product->name }}" loading="lazy" decoding="async" class="h-28 w-full object-cover">
                                         @else
                                             <div class="flex h-28 items-center justify-center text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
                                                 Image

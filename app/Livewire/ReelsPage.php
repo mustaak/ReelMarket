@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Bookmark;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Like;
@@ -18,12 +17,6 @@ use Livewire\Component;
 #[Layout('components.layouts.app')]
 class ReelsPage extends Component
 {
-    /** @var array<int> Reel ids the current user has liked */
-    public array $likedReelIds = [];
-
-    /** @var array<int> Reel ids saved by the current user */
-    public array $bookmarkedReelIds = [];
-
     /** @var array<int, string> Follow status indexed by followed user id */
     public array $followStatuses = [];
 
@@ -39,26 +32,6 @@ class ReelsPage extends Component
 
         if ($focusedReelId > 0) {
             $this->focusedReelId = $focusedReelId;
-        }
-
-        if (auth()->check()) {
-            $this->likedReelIds = Like::query()
-                ->where('user_id', auth()->id())
-                ->where('likeable_type', Reel::class)
-                ->pluck('likeable_id')
-                ->all();
-
-            $this->bookmarkedReelIds = Bookmark::query()
-                ->where('user_id', auth()->id())
-                ->where('bookmarkable_type', Reel::class)
-                ->pluck('bookmarkable_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            $this->followStatuses = Follow::query()
-                ->where('follower_id', auth()->id())
-                ->pluck('status', 'following_id')
-                ->all();
         }
     }
 
@@ -80,14 +53,12 @@ class ReelsPage extends Component
 
         if ($existing) {
             $existing->delete();
-            $this->likedReelIds = array_values(array_diff($this->likedReelIds, [$reelId]));
         } else {
             Like::create([
                 'likeable_type' => Reel::class,
                 'likeable_id' => $reel->id,
                 'user_id' => auth()->id(),
             ]);
-            $this->likedReelIds[] = $reelId;
         }
         // Reel::likes_count is kept in sync by LikeObserver
     }
@@ -103,15 +74,7 @@ class ReelsPage extends Component
         }
 
         $reel = Reel::visibleTo($user)->findOrFail($reelId);
-        $isBookmarked = $bookmarkService->toggle($user, $reel);
-
-        if ($isBookmarked) {
-            $this->bookmarkedReelIds[] = $reel->id;
-
-            return;
-        }
-
-        $this->bookmarkedReelIds = array_values(array_diff($this->bookmarkedReelIds, [$reel->id]));
+        $bookmarkService->toggle($user, $reel);
     }
 
     public function toggleFollow(int $userId, FollowService $followService): void
@@ -146,6 +109,8 @@ class ReelsPage extends Component
     {
         Reel::visibleTo(auth()->user())->findOrFail($reelId);
         $this->activeCommentsReelId = $reelId;
+        $this->newComment = '';
+        $this->resetErrorBag('newComment');
     }
 
     public function closeComments(): void
@@ -219,6 +184,13 @@ class ReelsPage extends Component
                 'comments' => fn ($q) => $q->latest()->limit(20)->with('user:id,name'),
             ]);
 
+        if ($viewer instanceof User) {
+            $reelsQuery->withExists([
+                'likes as is_liked_by_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
+                'bookmarks as is_bookmarked_by_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
+            ]);
+        }
+
         if ($this->focusedReelId) {
             $reelsQuery->whereKey($this->focusedReelId);
         } else {
@@ -226,11 +198,18 @@ class ReelsPage extends Component
         }
 
         $reels = $reelsQuery->get();
+        $this->followStatuses = $viewer instanceof User
+            ? Follow::query()
+                ->where('follower_id', $viewer->id)
+                ->whereIn('following_id', $reels->pluck('user_id')->unique())
+                ->pluck('status', 'following_id')
+                ->all()
+            : [];
 
         return view('livewire.reels-page', [
             'reels' => $reels,
             'followStatuses' => $this->followStatuses,
-            'bookmarkedReelIds' => $this->bookmarkedReelIds,
+            'activeCommentsReel' => $reels->firstWhere('id', $this->activeCommentsReelId),
         ]);
     }
 }

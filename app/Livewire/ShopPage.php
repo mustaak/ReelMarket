@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\ProductCatalogCache;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -30,6 +32,8 @@ class ShopPage extends Component
 
     public $selectedAttributes = [];
 
+    protected ProductCatalogCache $productCatalogCache;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'selectedCategory' => ['except' => 'All'],
@@ -39,6 +43,11 @@ class ShopPage extends Component
         'inStockOnly' => ['except' => false],
         'selectedAttributes' => ['except' => []],
     ];
+
+    public function boot(ProductCatalogCache $productCatalogCache): void
+    {
+        $this->productCatalogCache = $productCatalogCache;
+    }
 
     public function updated($propertyName)
     {
@@ -68,7 +77,7 @@ class ShopPage extends Component
 
     public function render()
     {
-        $query = Product::active()->with(['images', 'category', 'brand', 'attributeValues', 'variants']);
+        $query = Product::active();
 
         // 1. Search Query
         if (! empty($this->search)) {
@@ -115,7 +124,53 @@ class ShopPage extends Component
             });
         }
 
-        $products = $query->latest()->paginate(9);
+        $selectedBrands = $this->selectedBrands;
+        sort($selectedBrands);
+
+        $selectedAttributeIds = array_keys(array_filter($this->selectedAttributes));
+        sort($selectedAttributeIds);
+
+        $cacheKey = hash('sha256', serialize([
+            'search' => $this->search,
+            'category' => $this->selectedCategory,
+            'brands' => $selectedBrands,
+            'min_price' => $this->minPrice,
+            'max_price' => $this->maxPrice,
+            'in_stock' => $this->inStockOnly,
+            'attributes' => $selectedAttributeIds,
+            'page' => $this->getPage(),
+        ]));
+
+        $cachedPage = $this->productCatalogCache->remember(
+            'shop:'.$cacheKey,
+            function () use ($query): array {
+                $page = $query->latest()->paginate(9);
+
+                return [
+                    'ids' => $page->getCollection()->modelKeys(),
+                    'total' => $page->total(),
+                ];
+            },
+        );
+        $productsById = Product::active()
+            ->with(['images', 'category', 'brand', 'attributeValues', 'variants'])
+            ->whereKey($cachedPage['ids'])
+            ->get()
+            ->keyBy('id');
+        $productItems = collect($cachedPage['ids'])
+            ->map(fn ($productId) => $productsById->get($productId))
+            ->filter()
+            ->values();
+        $products = (new LengthAwarePaginator(
+            $productItems,
+            $cachedPage['total'],
+            9,
+            $this->getPage(),
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ],
+        ))->withQueryString();
 
         $categories = Category::all();
         $brands = Brand::all();

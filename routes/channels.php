@@ -3,13 +3,13 @@
 use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
-
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    return Conversation::findOrFail($conversationId)
-        ->users()
-        ->where('user_id', $user->id)
+    return Conversation::query()
+        ->whereKey($conversationId)
+        ->whereHas('users', function ($query) use ($user) {
+            $query
+                ->whereKey($user->id)
+                ->whereNotNull('conversation_user.accepted_at');
+        })
         ->exists();
 });

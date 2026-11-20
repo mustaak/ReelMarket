@@ -246,7 +246,7 @@
                                 <a href="{{ route('product.detail', $product->slug ?? $product->id) }}" class="relative block overflow-hidden rounded-2xl border border-slate-900 bg-slate-950">
                                     <div class="aspect-[4/5] w-full">
                                         @if($firstImg)
-                                            <img src="{{ asset('storage/' . $firstImg) }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                            <img src="{{ asset('storage/' . $firstImg) }}" alt="{{ $product->name }}" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                                         @else
                                             <div class="flex h-full w-full flex-col items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-600">
                                                 <x-heroicon-o-photo class="size-7" />

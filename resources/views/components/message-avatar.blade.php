@@ -13,6 +13,8 @@
         <img
             src="{{ asset('storage/' . $avatar) }}"
             alt=""
+            loading="lazy"
+            decoding="async"
             class="size-full object-cover"
         >
     @else

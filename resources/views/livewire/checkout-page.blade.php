@@ -100,7 +100,7 @@
                             <span class="flex min-w-0 items-center gap-3">
                                 <span class="theme-inner flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-800">
                                     @if($item['image'])
-                                        <img src="{{ asset('storage/' . $item['image']) }}" alt="" class="size-full object-cover">
+                                        <img src="{{ asset('storage/' . $item['image']) }}" alt="" loading="lazy" decoding="async" class="size-full object-cover">
                                     @else
                                         <x-heroicon-o-shopping-bag class="size-5 text-slate-500" />
                                     @endif

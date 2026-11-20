@@ -1,4 +1,24 @@
-<div wire:poll.5s="refreshMessages" x-data="{ tab: 'primary' }"
+@php
+    $viewer = auth()->user();
+
+    $hasOpenThread = $activeConversation || $recipient;
+
+    $threadUser = null;
+
+    if ($activeConversation) {
+        $threadUser = $activeConversation->users->first(fn($user) => !$user->is($viewer));
+    } elseif ($recipient) {
+        $threadUser = $recipient;
+    }
+
+    $threadTitle = $threadUser?->name ?? 'Messages';
+    $threadAvatar = $threadUser?->profile?->avatar ?? ($threadUser?->profile?->avatar_url ?? null);
+    $requestCount = $requests->count();
+@endphp
+
+<div wire:key="messages-page"
+    wire:poll.5s="refreshMessages"
+    x-data="{ tab: 'primary', emojiPickerOpen: false }"
     x-on:conversation-scroll-bottom.window="
         $nextTick(() => {
             const el = document.getElementById('messages-scroll');
@@ -8,40 +28,19 @@
             }
         })
     "
-    class="w-full bg-[#090909] px-3 py-3 sm:px-5 sm:py-5 lg:px-7">
-    @php
-        $viewer = auth()->user();
-
-        $hasOpenThread = $activeConversation || $recipient;
-
-        $threadUser = null;
-
-        if ($activeConversation) {
-            $threadUser = $activeConversation->users->first(fn($user) => !$user->is($viewer));
-        } elseif ($recipient) {
-            $threadUser = $recipient;
-        }
-
-        $threadTitle = $threadUser?->name ?? 'Messages';
-
-        $threadAvatar = $threadUser?->profile?->avatar ?? ($threadUser?->profile?->avatar_url ?? null);
-
-        $requestCount = $requests->count();
-    @endphp
-
-
+    class="editorial-messages w-full px-3 py-3 sm:px-5 sm:py-5 lg:px-7">
     {{-- ============================================================ --}}
     {{-- MESSAGES CONTAINER --}}
     {{-- ============================================================ --}}
 
     <div
         class="
-            mx-auto flex h-[calc(100vh-150px)] min-h-[610px] w-full max-w-[1320px] overflow-hidden
-            rounded-2xl
+            mx-auto flex h-[calc(100dvh-140px)] min-h-[500px] max-h-[900px] w-full max-w-[1440px] overflow-hidden
+            rounded-[28px]
             border
             border-[#262626]
             bg-[#0d0d0d]
-            shadow-2xl
+            shadow-[0_24px_80px_rgba(0,0,0,0.18)]
         ">
 
 
@@ -114,8 +113,12 @@
                         <path stroke-linecap="round" d="m20 20-4-4" />
                     </svg>
 
-                    <input type="text" placeholder="Search messages"
-                        class="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-[#666]">
+                    <input
+                        type="text"
+                        placeholder="Search messages or people..."
+                        wire:model.live.debounce.300ms="search"
+                        class="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-[#666]"
+                    >
 
                 </div>
 
@@ -130,38 +133,6 @@
 
                 <div class="flex gap-4 overflow-x-auto no-scrollbar py-2">
 
-                    {{-- Add note button --}}
-
-                    {{-- Add note --}}
-
-                    <button type="button" class="flex w-[60px] shrink-0 flex-col items-center">
-
-                        <div
-                            class="
-                                flex
-                                h-14
-                                w-14
-                                items-center
-                                justify-center
-                                rounded-full
-                                border
-                                border-dashed
-                                border-[#555]
-                                bg-[#151515]
-                            ">
-                            <svg class="h-5 w-5 text-[#777]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.6">
-                                <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-                            </svg>
-                        </div>
-
-                        <span class="mt-1.5 w-full truncate text-center text-[11px] text-[#858585]">
-                            Add note
-                        </span>
-
-                    </button>
-
-
                     {{-- Recent users --}}
 
                     @foreach ($conversations->take(4) as $storyConversation)
@@ -172,7 +143,7 @@
                         @endphp
 
                         <button type="button" wire:click="selectConversation({{ $storyConversation->id }})"
-                            class="flex w-[60px] shrink-0 flex-col items-center">
+                            class="flex w-[60px] shrink-0 flex-col items-center cursor-pointer">
 
                             <div class="relative">
 
@@ -185,9 +156,6 @@
                                         {{ strtoupper(substr($storyUser?->name ?? 'U', 0, 1)) }}
                                     </div>
                                 @endif
-
-                                <span
-                                    class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#101010] bg-emerald-500"></span>
 
                             </div>
 
@@ -257,8 +225,7 @@
                     @endphp
 
 
-                    <button type="button" wire:key="conversation-{{ $conversation->id }}"
-                        wire:click="selectConversation({{ $conversation->id }})"
+                    <div wire:key="conversation-{{ $conversation->id }}"
                         class="
                             group
                             flex
@@ -272,6 +239,8 @@
                             transition
                             {{ $isActive ? 'border-[#ff7a00] bg-[#1b1b1b]' : 'border-transparent hover:bg-[#171717]' }}
                         ">
+                        <button type="button" wire:click="selectConversation({{ $conversation->id }})"
+                            class="flex min-w-0 flex-1 items-center gap-3 text-left">
 
                         {{-- Avatar --}}
 
@@ -286,9 +255,6 @@
                                     {{ strtoupper(substr($otherUser?->name ?? 'U', 0, 1)) }}
                                 </div>
                             @endif
-
-                            <span
-                                class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#101010] bg-emerald-500"></span>
 
                         </div>
 
@@ -320,7 +286,7 @@
                                             You:
                                         @endif
 
-                                        {{ $latestMessage->content }}
+                                        {{ $latestMessage->content !== '' ? $latestMessage->content : ($latestMessage->attachment_name ? 'Attachment: '.$latestMessage->attachment_name : ($latestMessage->gif_url ? 'GIF' : '')) }}
                                     @else
                                         Start a conversation
                                     @endif
@@ -335,7 +301,9 @@
 
                         </div>
 
-                    </button>
+                        </button>
+
+                    </div>
 
                 @empty
 
@@ -412,7 +380,7 @@
 
                                 @if ($latestMessage)
                                     <p class="mt-2 line-clamp-2 text-[12px] leading-5 text-[#aaa]">
-                                        {{ $latestMessage->content }}
+                                        {{ $latestMessage->content !== '' ? $latestMessage->content : ($latestMessage->attachment_name ? 'Attachment: '.$latestMessage->attachment_name : ($latestMessage->gif_url ? 'GIF' : '')) }}
                                     </p>
                                 @endif
 
@@ -473,6 +441,7 @@
 
         <section
             class="
+                relative
                 min-w-0
                 flex-1
                 flex-col
@@ -515,9 +484,6 @@
                             </div>
                         @endif
 
-                        <span
-                            class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#050505] bg-emerald-500"></span>
-
                     </div>
 
 
@@ -527,40 +493,13 @@
                             {{ $threadTitle }}
                         </h2>
 
-                        <p class="mt-0.5 text-[11px] text-emerald-500">
-                            Active now
+                        <p class="mt-0.5 text-[11px] text-[#777]">
+                            Direct conversation
                         </p>
 
                     </div>
 
-
-                    {{-- Header actions --}}
-
-                    <div class="ml-auto flex items-center gap-1">
-
-                        <button type="button"
-                            class="flex h-9 w-9 items-center justify-center rounded-full text-[#707070] hover:bg-[#171717] hover:text-white">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.7">
-                                <circle cx="12" cy="12" r="9" />
-                                <path stroke-linecap="round" d="M12 8v4l2.5 1.5" />
-                            </svg>
-                        </button>
-
-                        <button type="button"
-                            class="flex h-9 w-9 items-center justify-center rounded-full text-[#707070] hover:bg-[#171717] hover:text-white">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.7">
-                                <circle cx="12" cy="5" r="1" />
-                                <circle cx="12" cy="12" r="1" />
-                                <circle cx="12" cy="19" r="1" />
-                            </svg>
-                        </button>
-
-                    </div>
-
                 </header>
-
 
                 {{-- ================================================= --}}
                 {{-- MESSAGES --}}
@@ -597,6 +536,7 @@
 
                                         @if ($threadAvatar)
                                             <img src="{{ $threadAvatar }}" alt=""
+                                                loading="lazy" decoding="async"
                                                 class="h-8 w-8 rounded-full object-cover">
                                         @else
                                             <div
@@ -622,7 +562,36 @@
                                                 ? 'rounded-[20px] rounded-br-md bg-[#ff7a00] text-black'
                                                 : 'rounded-[20px] rounded-bl-md bg-[#1b1b1d] text-[#ededed]' }}
                                         ">
-                                        {{ $message->content }}
+                                        @if ($message->content !== '')
+                                            <p class="whitespace-pre-wrap break-words">{{ $message->content }}</p>
+                                        @endif
+
+                                        @if ($message->gif_url)
+                                            <img src="{{ $message->gif_url }}" alt="Animated GIF" loading="lazy"
+                                                class="mt-2 max-h-72 max-w-full rounded-xl object-contain">
+                                        @endif
+
+                                        @if ($message->attachment_path)
+                                            <a href="{{ route('messages.attachments.show', $message) }}"
+                                                class="{{ $message->content !== '' ? 'mt-2 block' : 'block' }}"
+                                                @if (!str_starts_with((string) $message->attachment_mime, 'image/')) download @endif>
+                                                @if (str_starts_with((string) $message->attachment_mime, 'image/'))
+                                                    <img src="{{ route('messages.attachments.show', $message) }}"
+                                                        alt="{{ $message->attachment_name }}"
+                                                        loading="lazy"
+                                                        class="max-h-64 max-w-full rounded-xl object-contain">
+                                                @else
+                                                    <span class="flex items-center gap-2 text-sm underline">
+                                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor" stroke-width="1.7">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M12 16V4m0 12 4-4m-4 4-4-4M4 20h16" />
+                                                        </svg>
+                                                        <span class="break-all">{{ $message->attachment_name }}</span>
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        @endif
                                     </div>
 
 
@@ -706,17 +675,108 @@
                 {{-- COMPOSER --}}
                 {{-- ================================================= --}}
 
-                <div class="shrink-0 border-t border-[#191919] px-4 py-4 sm:px-6">
+                <div class="shrink-0 border-t border-[#191919] bg-[#0d0d0d]/90 px-4 py-4 sm:px-6">
+                    <form wire:submit="sendMessage" class="flex flex-col gap-2">
+                        @if ($attachment)
+                            <div class="flex items-center justify-between gap-3 rounded-xl border border-[#292929] bg-[#111111] px-3 py-2 text-xs text-[#b8b8b8]">
+                                <span class="truncate">{{ $attachment->getClientOriginalName() }}</span>
+                                <button type="button" wire:click="removeAttachment" class="shrink-0 font-medium text-rose-500">Remove</button>
+                            </div>
+                        @endif
 
-                    <form wire:submit="sendMessage" class="flex items-end gap-2">
+                        @if ($gifUrl)
+                            <div class="flex items-center justify-between gap-3 rounded-xl border border-[#292929] bg-[#111111] px-3 py-2 text-xs text-[#b8b8b8]">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <img src="{{ $gifUrl }}" alt="Selected GIF" class="h-12 w-16 rounded-lg object-cover">
+                                    <span class="truncate">GIF attached</span>
+                                </div>
+                                <button type="button" wire:click="removeGif" class="shrink-0 font-medium text-rose-500">Remove</button>
+                            </div>
+                        @endif
+
+                        <div class="flex items-end gap-2">
+                            <label class="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#292929] text-[#707070] transition hover:bg-[#171717] hover:text-white"
+                                aria-label="Attach a photo or file" title="Attach a photo or file">
+                                <input type="file" wire:model="attachment"
+                                    accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                                    class="sr-only">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21.4 11.6-8.5 8.5a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7l-9.2 9.2a2 2 0 01-2.8-2.8l8.5-8.5" />
+                                </svg>
+                            </label>
+
+                            <div class="relative" x-data="chatGifPicker(@js(config('services.giphy.api_key')))" x-on:click.outside="isOpen = false">
+                                <button type="button" x-on:click="toggle()"
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#292929] text-[11px] font-bold tracking-wide text-[#707070] transition hover:bg-[#171717] hover:text-white"
+                                    aria-label="Search GIFs" title="Search GIFs">GIF</button>
+
+                                <section x-show="isOpen" x-cloak
+                                    class="absolute bottom-14 left-0 z-30 flex max-h-[min(440px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-[#292929] bg-[#111111] shadow-2xl sm:left-auto sm:right-0"
+                                    aria-label="GIF picker">
+                                    <div class="border-b border-[#292929] p-3">
+                                        <input type="search" x-model="query" x-on:input.debounce.350ms="loadGifs()"
+                                            placeholder="Search GIFs"
+                                            class="h-10 w-full rounded-xl border border-[#292929] bg-[#191919] px-3 text-sm text-white outline-none placeholder:text-[#777] focus:border-[#555]">
+                                        <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777]">
+                                            Trending · Powered by GIPHY
+                                        </p>
+                                    </div>
+
+                                    <div class="min-h-28 flex-1 overflow-y-auto p-2">
+                                        <div x-show="isLoading" class="flex h-28 items-center justify-center text-xs text-[#999]">
+                                            Loading GIFs…
+                                        </div>
+                                        <p x-show="error" x-text="error" class="px-3 py-5 text-center text-xs leading-5 text-[#aaa]"></p>
+                                        <div x-show="!isLoading && !error && gifs.length === 0" class="px-3 py-5 text-center text-xs text-[#aaa]">
+                                            No GIFs found. Try another search.
+                                        </div>
+                                        <div x-show="!isLoading && gifs.length > 0" class="grid grid-cols-3 gap-2">
+                                            <template x-for="gif in gifs" :key="gif.id">
+                                                <button type="button" x-on:click="selectGif(gif)"
+                                                    class="group overflow-hidden rounded-lg bg-[#191919] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]"
+                                                    :aria-label="`Send ${gif.title}`">
+                                                    <img :src="gif.preview" :alt="gif.title" loading="lazy"
+                                                        class="h-24 w-full object-cover transition group-hover:scale-105">
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <a href="https://giphy.com" target="_blank" rel="noopener noreferrer"
+                                        class="border-t border-[#292929] px-3 py-2 text-center text-[10px] text-[#888] hover:text-white">
+                                        Powered by GIPHY
+                                    </a>
+                                </section>
+                            </div>
+
+                            <div class="relative">
+                                <button type="button" x-on:click="emojiPickerOpen = !emojiPickerOpen"
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#292929] text-xl text-[#707070] transition hover:bg-[#171717] hover:text-white"
+                                    aria-label="Open emoji picker" title="Emoji">😊</button>
+                                <div x-show="emojiPickerOpen" x-cloak x-on:click.outside="emojiPickerOpen = false"
+                                    class="absolute bottom-14 left-0 z-30 overflow-hidden rounded-2xl border border-[#292929] shadow-2xl sm:left-auto sm:right-0">
+                                    <div wire:ignore>
+                                        <emoji-picker x-on:emoji-click="
+                                            const input = $refs.messageInput;
+                                            if (!input) return;
+
+                                            const start = input.selectionStart;
+                                            const end = input.selectionEnd;
+                                            input.value = input.value.slice(0, start) + $event.detail.unicode + input.value.slice(end);
+                                            input.setSelectionRange(start + $event.detail.unicode.length, start + $event.detail.unicode.length);
+                                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                                            input.focus();
+                                        "></emoji-picker>
+                                    </div>
+                                </div>
+                            </div>
 
                         <div
                             class="
                                 flex
-                                min-h-[48px]
+                                min-h-[44px]
                                 flex-1
                                 items-center
-                                rounded-2xl
+                                rounded-[22px]
                                 border
                                 border-[#292929]
                                 bg-[#111111]
@@ -725,9 +785,8 @@
                                 focus-within:border-[#404040]
                             ">
 
-                            <textarea wire:model="messageContent" rows="1" maxlength="2000" placeholder="Message..."
+                            <textarea x-ref="messageInput" wire:model="messageContent" rows="1" maxlength="2000" placeholder="Write a message..."
                                 class="max-h-32 min-h-[24px] flex-1 resize-none bg-transparent py-3 text-[14px] text-white outline-none placeholder:text-[#5f5f5f]"
-                                x-data
                                 x-on:keydown.enter="
                                     if (!$event.shiftKey) {
                                         $event.preventDefault();
@@ -741,7 +800,7 @@
                         <button type="submit" wire:loading.attr="disabled" wire:target="sendMessage"
                             class="
                                 flex
-                                h-12
+                                h-11
                                 w-12
                                 shrink-0
                                 items-center
@@ -755,26 +814,24 @@
                             ">
 
                             <span wire:loading.remove wire:target="sendMessage">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="1.9">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13" />
-
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9 20-7z" />
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M5 12h14M13 5l7 7-7 7" />
                                 </svg>
                             </span>
 
-
                             <span wire:loading wire:target="sendMessage">
-                                <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="9" stroke="currentColor"
-                                        stroke-width="2" class="opacity-25" />
-
-                                    <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" class="opacity-75" />
+                                <svg class="h-5 w-5 animate-pulse" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <circle cx="5" cy="12" r="2" />
+                                    <circle cx="12" cy="12" r="2" />
+                                    <circle cx="19" cy="12" r="2" />
                                 </svg>
                             </span>
 
                         </button>
+                        </div>
 
                     </form>
 
@@ -784,6 +841,16 @@
                             {{ $message }}
                         </p>
                     @enderror
+                    @error('attachment')
+                        <p class="mt-2 px-2 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                    @error('gifUrl')
+                        <p class="mt-2 px-2 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+
+                    <div wire:loading wire:target="attachment" class="mt-2 px-2 text-xs text-[#777]">
+                        Uploading attachment…
+                    </div>
 
                 </div>
             @else

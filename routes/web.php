@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FollowController;
+use App\Http\Controllers\MessageAttachmentController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserProfileController;
@@ -16,7 +17,6 @@ use App\Livewire\ReelsPage;
 use App\Livewire\SavedContentPage;
 use App\Livewire\ShopPage;
 use App\Livewire\SocialFeed;
-
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeFeed::class)->name('home');
@@ -27,12 +27,19 @@ Route::get('/reels', ReelsPage::class)->name('reels.index');
 Route::get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
 Route::get('/social', SocialFeed::class)->name('social.index');
 
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/forgot-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
+        ->middleware('throttle:6,1')
+        ->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:6,1')
+        ->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -40,6 +47,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', NotificationsPage::class)->name('notifications.index');
     Route::get('/saved', SavedContentPage::class)->name('saved.index');
     Route::get('/messages', MessagesPage::class)->name('messages.index');
+    Route::get('/messages/{message}/attachment', [MessageAttachmentController::class, 'show'])
+        ->name('messages.attachments.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout.index');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

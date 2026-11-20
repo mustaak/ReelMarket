@@ -106,6 +106,7 @@
                             class="group theme-card relative block aspect-[3/4] overflow-hidden rounded-2xl border border-slate-800/80">
                             @if ($reel->thumbnail)
                                 <img src="{{ asset('storage/' . $reel->thumbnail) }}" alt="Reel"
+                                    loading="lazy" decoding="async"
                                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                             @else
                                 <div class="flex h-full w-full items-center justify-center text-slate-600">
@@ -147,8 +148,8 @@
                             $followStatus = $followStatuses[$post->user_id] ?? null;
                             $isFollowing = $followStatus === 'accepted';
                             $isFollowRequested = $followStatus === 'pending';
-                            $isLiked = auth()->check() && in_array($post->id, $likedPostIds, true);
-                            $isBookmarked = auth()->check() && in_array($post->id, $bookmarkedPostIds, true);
+                            $isLiked = auth()->check() && (bool) $post->is_liked_by_viewer;
+                            $isBookmarked = auth()->check() && (bool) $post->is_bookmarked_by_viewer;
                             $postImage = $post->image ?: $post->images?->first()?->image_path ?? null;
                             $productImage = $post->product?->images?->first()?->image;
                         @endphp
@@ -215,6 +216,8 @@
                             <div class="relative aspect-[4/5] w-full overflow-hidden bg-slate-900">
                                 @if ($postImage)
                                     <img src="{{ asset('storage/' . $postImage) }}" alt="Post content"
+                                        loading="{{ $loop->first ? 'eager' : 'lazy' }}" decoding="async"
+                                        fetchpriority="{{ $loop->first ? 'high' : 'auto' }}"
                                         class="h-full w-full object-cover" />
                                 @else
                                     <div
@@ -237,7 +240,7 @@
                                                 <x-heroicon-o-heart class="size-6" />
                                             @endif
                                             <span class="text-xs font-bold">
-                                                {{ number_format(max((int) ($post->likes_count ?? 0), $post->likes->count())) }}
+                                                {{ number_format(max((int) ($post->likes_count ?? 0), (int) $post->actual_likes_count)) }}
                                             </span>
                                         </button>
 
@@ -284,6 +287,7 @@
                                                 @if ($productImage)
                                                     <img src="{{ asset('storage/' . $productImage) }}"
                                                         alt="{{ $post->product->name }}"
+                                                        loading="lazy" decoding="async"
                                                         class="h-full w-full object-cover" />
                                                 @else
                                                     <span class="text-[10px] font-black uppercase text-slate-400">
@@ -357,6 +361,7 @@
                                     class="group relative block aspect-[3/4] overflow-hidden rounded-xl border border-slate-800/80">
                                     @if ($reel->thumbnail)
                                         <img src="{{ asset('storage/' . $reel->thumbnail) }}" alt="Reel"
+                                            loading="lazy" decoding="async"
                                             class="h-full w-full object-cover transition group-hover:scale-105">
                                     @else
                                         <div
@@ -397,7 +402,8 @@
                                         class="theme-inner flex size-12 items-center justify-center overflow-hidden rounded-xl border border-slate-800 transition group-hover:border-(--accent-primary)">
                                         @if ($cat->image)
                                             <img src="{{ asset('storage/' . $cat->image) }}"
-                                                alt="{{ $cat->name }}" class="h-full w-full object-cover">
+                                                alt="{{ $cat->name }}" loading="lazy" decoding="async"
+                                                class="h-full w-full object-cover">
                                         @else
                                             <x-heroicon-o-tag class="size-5 text-slate-400" />
                                         @endif
@@ -417,7 +423,7 @@
                 <p class="px-2 text-[11px] leading-relaxed text-slate-500">
                     About · Help · Privacy · Terms · Creators · Ads · API · Jobs
                     <br>
-                    <span class="mt-1 block">© {{ date('Y') }} YourBrand</span>
+                    <span class="mt-1 block">© {{ date('Y') }} ReelMarket</span>
                 </p>
             </div>
         </aside>

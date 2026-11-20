@@ -12,6 +12,10 @@ class Message extends Model
         'sender_id',
         'content',
         'read_at',
+        'attachment_path',
+        'attachment_name',
+        'attachment_mime',
+        'gif_url',
     ];
 
     protected $casts = [

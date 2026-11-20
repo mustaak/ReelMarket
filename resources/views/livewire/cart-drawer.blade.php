@@ -45,7 +45,7 @@
                                    class="theme-inner size-20 shrink-0 overflow-hidden rounded-lg">
                                     @if ($line['image'])
                                         <img src="{{ asset('storage/' . $line['image']) }}" alt=""
-                                             class="size-full object-cover">
+                                             loading="lazy" decoding="async" class="size-full object-cover">
                                     @else
                                         <span class="theme-text grid size-full place-items-center text-2xl font-black">
                                             {{ mb_substr($line['name'], 0, 1) }}

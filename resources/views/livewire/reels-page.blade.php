@@ -37,9 +37,9 @@
 
                         $avatar = $reel->user->profile?->profile_picture;
 
-                        $liked = in_array($reel->id, $likedReelIds);
+                        $liked = auth()->check() && (bool) $reel->is_liked_by_viewer;
 
-                        $bookmarked = auth()->check() && in_array($reel->id, $bookmarkedReelIds, true);
+                        $bookmarked = auth()->check() && (bool) $reel->is_bookmarked_by_viewer;
 
                         $followStatus = $followStatuses[$reel->user_id] ?? null;
 
@@ -69,11 +69,12 @@
                             {{-- VIDEO --}}
                             @if ($videoUrl)
                                 <video src="{{ $videoUrl }}"
-                                    @if ($posterUrl) poster="{{ $posterUrl }}" @endif
+                                    @if ($posterUrl) data-poster="{{ $posterUrl }}" @endif
                                     class="size-full cursor-pointer object-cover" playsinline muted loop
-                                    preload="auto"></video>
+                                    preload="none"></video>
                             @elseif ($posterUrl)
-                                <img src="{{ $posterUrl }}" alt="" class="size-full object-cover">
+                                <img src="{{ $posterUrl }}" alt="" loading="lazy" decoding="async"
+                                    class="size-full object-cover">
                             @else
                                 <div class="flex size-full items-center justify-center text-slate-600">
                                     <x-heroicon-o-film class="size-14" />
@@ -110,7 +111,7 @@
 
                                         @if ($avatar)
                                             <img src="{{ asset('storage/' . $avatar) }}" alt=""
-                                                class="size-full object-cover">
+                                                loading="lazy" decoding="async" class="size-full object-cover">
                                         @else
                                             <span class="theme-text text-xs font-black">
                                                 {{ strtoupper(substr($reel->user->name, 0, 1)) }}
@@ -437,6 +438,10 @@
                             return;
                         }
 
+                        if (video.dataset.poster) {
+                            video.poster = video.dataset.poster;
+                        }
+
                         stopAll(video);
 
                         //video.muted = true;
@@ -634,6 +639,78 @@
 
                         }
 
+                    });
+
+                    scrollBox.addEventListener('click', async event => {
+                        const button = event.target.closest('.share-btn');
+
+                        if (!button) {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const shareUrl = new URL(button.dataset.url, window.location.origin).href;
+
+                        try {
+                            if (navigator.share) {
+                                try {
+                                    await navigator.share({
+                                        title: 'ReelMarket reel',
+                                        text: 'Check out this reel',
+                                        url: shareUrl,
+                                    });
+
+                                    return;
+                                } catch (error) {
+                                    if (error.name === 'AbortError') {
+                                        return;
+                                    }
+                                }
+                            }
+
+                            let copied = false;
+
+                            if (navigator.clipboard?.writeText) {
+                                try {
+                                    await navigator.clipboard.writeText(shareUrl);
+                                    copied = true;
+                                } catch (error) {
+                                    copied = false;
+                                }
+                            }
+
+                            if (!copied) {
+                                const temporaryInput = document.createElement('textarea');
+                                temporaryInput.value = shareUrl;
+                                temporaryInput.setAttribute('readonly', '');
+                                temporaryInput.style.position = 'fixed';
+                                temporaryInput.style.opacity = '0';
+                                document.body.appendChild(temporaryInput);
+                                temporaryInput.select();
+
+                                try {
+                                    copied = document.execCommand('copy');
+                                } finally {
+                                    temporaryInput.remove();
+                                }
+                            }
+
+                            if (!copied) {
+                                throw new Error('Clipboard copy was not available.');
+                            }
+
+                            Livewire.dispatch('notify', {
+                                type: 'success',
+                                message: 'Reel link copied to clipboard.',
+                            });
+                        } catch (error) {
+                            Livewire.dispatch('notify', {
+                                type: 'error',
+                                message: 'Could not share this reel. Please try copying its link.',
+                            });
+                        }
                     });
 
 
@@ -863,6 +940,59 @@
                 initReelPlayer();
             </script>
         @endscript
+
+        @if ($activeCommentsReel)
+            <div class="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Comments"
+                wire:keydown.escape.window="closeComments">
+                <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" wire:click="closeComments"></div>
+
+                <section
+                    class="absolute inset-x-0 bottom-0 flex max-h-[75vh] flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-[#111] pb-[env(safe-area-inset-bottom)] text-white shadow-2xl md:inset-x-auto md:bottom-6 md:right-6 md:w-[26rem] md:rounded-2xl md:pb-0">
+                    <header class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                        <div>
+                            <h2 class="text-sm font-black">Comments</h2>
+                            <p class="mt-0.5 text-xs text-slate-400">{{ $activeCommentsReel->user->name }}'s reel</p>
+                        </div>
+                        <button type="button" wire:click="closeComments" aria-label="Close comments"
+                            class="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-white">
+                            <x-heroicon-o-x-mark class="size-5" />
+                        </button>
+                    </header>
+
+                    <ul class="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+                        @forelse ($activeCommentsReel->comments as $comment)
+                            <li wire:key="reel-comment-{{ $comment->id }}" class="flex items-start gap-2.5">
+                                <span
+                                    class="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black text-white">
+                                    {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                                </span>
+                                <p class="min-w-0 text-sm text-slate-300">
+                                    <span class="mr-1 font-bold text-white">{{ $comment->user->name }}</span>
+                                    {{ $comment->content }}
+                                </p>
+                            </li>
+                        @empty
+                            <li class="py-10 text-center text-sm text-slate-400">
+                                No comments yet. Be the first.
+                            </li>
+                        @endforelse
+                    </ul>
+
+                    <form wire:submit="postComment" class="flex items-center gap-2 border-t border-white/10 p-3">
+                        <input wire:model="newComment" type="text" maxlength="500" placeholder="Write a comment..."
+                            aria-label="Write a comment"
+                            class="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-white/30 focus:outline-none">
+                        <button type="submit" aria-label="Post comment"
+                            class="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:bg-slate-200">
+                            <x-heroicon-o-paper-airplane class="size-4" />
+                        </button>
+                    </form>
+                    @error('newComment')
+                        <p class="px-4 pb-3 text-xs text-rose-400">{{ $message }}</p>
+                    @enderror
+                </section>
+            </div>
+        @endif
 
         <livewire:report-content />
 

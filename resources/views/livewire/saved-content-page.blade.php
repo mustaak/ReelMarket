@@ -16,7 +16,7 @@
                 @foreach($posts as $post)
                     <article wire:key="saved-post-{{ $post->id }}" class="theme-card overflow-hidden rounded-xl border border-slate-800/80">
                         @if($post->image || $post->images->isNotEmpty())
-                            <img src="{{ asset('storage/' . ($post->image ?: $post->images->first()->image_path)) }}" alt="Post by {{ $post->user->name }}" class="aspect-[4/3] w-full object-cover">
+                            <img src="{{ asset('storage/' . ($post->image ?: $post->images->first()->image_path)) }}" alt="Post by {{ $post->user->name }}" loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover">
                         @endif
                         <div class="space-y-3 p-4">
                             <p class="text-xs font-bold text-slate-400">{{ $post->user->profile?->username ?? $post->user->name }}</p>
@@ -44,7 +44,7 @@
                     <article wire:key="saved-reel-{{ $reel->id }}" class="theme-card space-y-3 rounded-xl border border-slate-800/80 p-3">
                         <a href="{{ route('reels.index', ['reel' => $reel->id]) }}" class="block overflow-hidden rounded-lg">
                             @if($reel->thumbnail)
-                                <img src="{{ asset('storage/' . $reel->thumbnail) }}" alt="Reel by {{ $reel->user->name }}" class="aspect-[9/14] w-full object-cover">
+                                <img src="{{ asset('storage/' . $reel->thumbnail) }}" alt="Reel by {{ $reel->user->name }}" loading="lazy" decoding="async" class="aspect-[9/14] w-full object-cover">
                             @else
                                 <span class="flex aspect-[9/14] items-center justify-center bg-slate-950 text-sm font-bold text-slate-400">Open reel</span>
                             @endif

@@ -11,7 +11,7 @@
                 <div class="bg-[conic-gradient(from_20deg,#f97316,#db2777,#7c3aed,#f97316)] aspect-square size-20 rounded-full p-[3px] sm:size-32 md:size-36">
                     <div class="flex size-full items-center justify-center overflow-hidden rounded-full bg-[#17121d] text-2xl font-bold text-white sm:text-4xl">
                         @if($profile->profile_picture)
-                            <img src="{{ asset('storage/' . $profile->profile_picture) }}" alt="{{ $user->name }}" class="size-full object-cover">
+                            <img src="{{ asset('storage/' . $profile->profile_picture) }}" alt="{{ $user->name }}" fetchpriority="high" decoding="async" class="size-full object-cover">
                         @else
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         @endif
@@ -242,7 +242,7 @@
                             @endphp
                             <article class="group relative aspect-square overflow-hidden bg-[#17121d]">
                                 @if($image)
-                                    <img src="{{ asset('storage/' . $image) }}" alt="{{ $post->content ?: 'Photo by ' . $user->name }}" loading="lazy" class="size-full object-cover transition duration-300 group-hover:scale-[1.02]">
+                                    <img src="{{ asset('storage/' . $image) }}" alt="{{ $post->content ?: 'Photo by ' . $user->name }}" loading="lazy" decoding="async" class="size-full object-cover transition duration-300 group-hover:scale-[1.02]">
                                 @else
                                     <div class="flex size-full items-center justify-center p-3 text-center text-xs leading-5 text-slate-300 sm:p-6 sm:text-sm">
                                         {{ $post->content ?: 'A look from ' . $user->name }}
@@ -278,7 +278,7 @@
                             @php $reelPoster = $reel->thumbnail ? asset('storage/' . $reel->thumbnail) : null; @endphp
                             <a href="{{ route('reels.index', ['reel' => $reel->id]) }}#reel-{{ $reel->id }}" aria-label="Watch reel{{ $reel->caption ? ': ' . $reel->caption : '' }}" class="group relative aspect-square overflow-hidden bg-[#17121d]">
                                 @if($reelPoster)
-                                    <img src="{{ $reelPoster }}" alt="{{ $reel->caption ?: 'Reel by ' . $user->name }}" loading="lazy" class="size-full object-cover transition duration-300 group-hover:scale-[1.02]">
+                                    <img src="{{ $reelPoster }}" alt="{{ $reel->caption ?: 'Reel by ' . $user->name }}" loading="lazy" decoding="async" class="size-full object-cover transition duration-300 group-hover:scale-[1.02]">
                                 @else
                                     <div class="flex size-full items-center justify-center bg-[linear-gradient(145deg,#17212b,#252038_55%,#30202b)] p-3 text-center text-xs leading-5 text-slate-200 sm:p-6 sm:text-sm">
                                         {{ $reel->caption ?: 'Reel by ' . $user->name }}
@@ -311,7 +311,7 @@
                             <a href="{{ route('users.show', $connection) }}" wire:key="connection-{{ $connection->id }}" class="flex items-center gap-3 py-3">
                                 <span class="theme-soft-bg flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold text-white">
                                     @if($connection->profile?->profile_picture)
-                                        <img src="{{ asset('storage/' . $connection->profile->profile_picture) }}" alt="" class="size-full object-cover">
+                                        <img src="{{ asset('storage/' . $connection->profile->profile_picture) }}" alt="" loading="lazy" decoding="async" class="size-full object-cover">
                                     @else
                                         {{ strtoupper(substr($connection->name, 0, 1)) }}
                                     @endif

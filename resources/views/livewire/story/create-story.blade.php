@@ -94,6 +94,7 @@
                                 <video
                                     src="{{ $media->temporaryUrl() }}"
                                     controls
+                                    preload="metadata"
                                     class="mx-auto max-h-80 w-full rounded-xl object-contain"
                                 ></video>
                             @endif

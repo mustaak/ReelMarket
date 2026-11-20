@@ -9,12 +9,18 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use RuntimeException;
+use Throwable;
 
 #[Layout('components.layouts.app')]
 class MessagesPage extends Component
 {
+    use WithFileUploads;
+
     public ?int $activeConversationId = null;
 
     /*
@@ -23,13 +29,19 @@ class MessagesPage extends Component
     |--------------------------------------------------------------------------
     | IMPORTANT:
     | Iska matlab sirf ye hai ki message box kis user ke liye open hai.
-    | Is stage par database me conversation create NAHI hoti.
+    | Is stage p    ar database me conversation create NAHI hoti.
     */
     public ?int $newRecipientId = null;
 
     public string $messageContent = '';
 
+    public $attachment = null;
+
+    public ?string $gifUrl = null;
+
     public ?int $lastMessageId = null;
+
+    public string $search = '';
 
     public function mount(): void
     {
@@ -97,6 +109,8 @@ class MessagesPage extends Component
         $this->newRecipientId = null;
 
         $this->messageContent = '';
+        $this->attachment = null;
+        $this->gifUrl = null;
 
         $latestMessageId = Message::query()
             ->where('conversation_id', $conversation->id)
@@ -124,6 +138,8 @@ class MessagesPage extends Component
         $this->activeConversationId = null;
         $this->newRecipientId = null;
         $this->messageContent = '';
+        $this->attachment = null;
+        $this->gifUrl = null;
         $this->lastMessageId = null;
     }
 
@@ -175,6 +191,8 @@ class MessagesPage extends Component
         $this->activeConversationId = null;
         $this->newRecipientId = $recipient->id;
         $this->messageContent = '';
+        $this->attachment = null;
+        $this->gifUrl = null;
         $this->lastMessageId = null;
     }
 
@@ -190,11 +208,31 @@ class MessagesPage extends Component
     {
         $validated = $this->validate([
             'messageContent' => [
-                'required',
+                'nullable',
                 'string',
                 'max:2000',
+                'required_without_all:attachment,gifUrl',
+            ],
+            'attachment' => [
+                'nullable',
+                'file',
+                'max:10240',
+                'mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,csv,txt',
+                'required_without_all:messageContent,gifUrl',
+            ],
+            'gifUrl' => [
+                'nullable',
+                'url',
+                'max:2048',
+                'required_without_all:messageContent,attachment',
             ],
         ]);
+
+        if ($this->gifUrl !== null && ! $this->isAllowedGifUrl($this->gifUrl)) {
+            $this->addError('gifUrl', 'Choose a GIF from the GIPHY picker.');
+
+            return;
+        }
 
         $sender = $this->currentUser();
 
@@ -213,144 +251,175 @@ class MessagesPage extends Component
             return;
         }
 
-        $result = DB::transaction(function () use (
-            $sender,
-            $validated
-        ): array {
+        $storedAttachmentPath = null;
 
-            /*
+        try {
+            $result = DB::transaction(function () use (
+                $sender,
+                $validated,
+                &$storedAttachmentPath,
+            ): array {
+                /*
             |--------------------------------------------------------------------------
             | CASE 1:
             | Existing conversation
             |--------------------------------------------------------------------------
             */
-            if ($this->activeConversationId) {
+                if ($this->activeConversationId) {
 
-                $conversation = $this->findConversationForCurrentUser(
-                    $this->activeConversationId
-                );
-
-            } else {
-
-                /*
-                |--------------------------------------------------------------------------
-                | CASE 2:
-                | First message to a new user
-                |--------------------------------------------------------------------------
-                */
-
-                $recipient = User::query()->findOrFail(
-                    $this->newRecipientId
-                );
-
-                $this->authorizeMessage(
-                    $sender,
-                    $recipient
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | Check again whether direct conversation already exists.
-                |
-                | This prevents duplicate conversations.
-                |--------------------------------------------------------------------------
-                */
-                $conversation = $this->findDirectConversation(
-                    $sender,
-                    $recipient
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | NEW conversation
-                |--------------------------------------------------------------------------
-                */
-                if (! $conversation) {
-
-                    $conversation = Conversation::query()->create([
-                        'direct_pair_key' => $this->directPairKey(
-                            $sender,
-                            $recipient
-                        ),
-                    ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | IMPORTANT:
-                    |
-                    | Sender:
-                    | accepted_at = NOW
-                    |
-                    | Recipient:
-                    | accepted_at = NULL
-                    |
-                    | Therefore recipient ko REQUEST milegi.
-                    |--------------------------------------------------------------------------
-                    */
-                    $conversation->users()->attach([
-                        $sender->id => [
-                            'accepted_at' => now(),
-                        ],
-
-                        $recipient->id => [
-                            'accepted_at' => null,
-                        ],
-                    ]);
+                    $conversation = $this->findConversationForCurrentUser(
+                        $this->activeConversationId
+                    );
 
                 } else {
 
                     /*
                     |--------------------------------------------------------------------------
-                    | Existing conversation mil gayi.
-                    |
-                    | Ensure sender is attached and accepted.
+                    | CASE 2:
+                    | First message to a new user
                     |--------------------------------------------------------------------------
                     */
-                    $senderPivotExists = $conversation
-                        ->users()
-                        ->whereKey($sender->id)
-                        ->exists();
 
-                    if (! $senderPivotExists) {
-                        $conversation->users()->attach(
-                            $sender->id,
-                            [
+                    $recipient = User::query()->findOrFail(
+                        $this->newRecipientId
+                    );
+
+                    $this->authorizeMessage(
+                        $sender,
+                        $recipient
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Check again whether direct conversation already exists.
+                    |
+                    | This prevents duplicate conversations.
+                    |--------------------------------------------------------------------------
+                    */
+                    $conversation = $this->findDirectConversation(
+                        $sender,
+                        $recipient
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NEW conversation
+                    |--------------------------------------------------------------------------
+                    */
+                    if (! $conversation) {
+
+                        $conversation = Conversation::query()->create([
+                            'direct_pair_key' => $this->directPairKey(
+                                $sender,
+                                $recipient
+                            ),
+                        ]);
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | IMPORTANT:
+                        |
+                        | Sender:
+                        | accepted_at = NOW
+                        |
+                        | Recipient:
+                        | accepted_at = NULL
+                        |
+                        | Therefore recipient ko REQUEST milegi.
+                        |--------------------------------------------------------------------------
+                        */
+                        $conversation->users()->attach([
+                            $sender->id => [
                                 'accepted_at' => now(),
-                            ]
-                        );
+                            ],
+
+                            $recipient->id => [
+                                'accepted_at' => null,
+                            ],
+                        ]);
+
                     } else {
-                        $conversation->users()->updateExistingPivot(
-                            $sender->id,
-                            [
-                                'accepted_at' => now(),
-                            ]
-                        );
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Existing conversation mil gayi.
+                        |
+                        | Ensure sender is attached and accepted.
+                        |--------------------------------------------------------------------------
+                        */
+                        $senderPivotExists = $conversation
+                            ->users()
+                            ->whereKey($sender->id)
+                            ->exists();
+
+                        if (! $senderPivotExists) {
+                            $conversation->users()->attach(
+                                $sender->id,
+                                [
+                                    'accepted_at' => now(),
+                                ]
+                            );
+                        } else {
+                            $conversation->users()->updateExistingPivot(
+                                $sender->id,
+                                [
+                                    'accepted_at' => now(),
+                                ]
+                            );
+                        }
                     }
                 }
-            }
 
-            /*
+                /*
             |--------------------------------------------------------------------------
             | CREATE MESSAGE
             |--------------------------------------------------------------------------
             */
-            $message = $conversation->messages()->create([
-                'sender_id' => $sender->id,
-                'content' => trim($validated['messageContent']),
-            ]);
+                $attachmentAttributes = [];
 
-            /*
+                if ($validated['attachment'] ?? null) {
+                    $storedAttachmentPath = $validated['attachment']->store(
+                        'message-attachments/'.$conversation->id,
+                        'local',
+                    );
+
+                    if (! is_string($storedAttachmentPath)) {
+                        throw new RuntimeException('The message attachment could not be stored.');
+                    }
+
+                    $attachmentAttributes = [
+                        'attachment_path' => $storedAttachmentPath,
+                        'attachment_name' => $validated['attachment']->getClientOriginalName(),
+                        'attachment_mime' => $validated['attachment']->getMimeType(),
+                    ];
+                }
+
+                $message = $conversation->messages()->create([
+                    'sender_id' => $sender->id,
+                    'content' => trim($validated['messageContent'] ?? ''),
+                    'gif_url' => $validated['gifUrl'] ?? null,
+                    ...$attachmentAttributes,
+                ]);
+
+                /*
             |--------------------------------------------------------------------------
             | Conversation updated_at update
             |--------------------------------------------------------------------------
             */
-            $conversation->touch();
+                $conversation->touch();
 
-            return [
-                'conversation_id' => $conversation->id,
-                'message' => $message,
-            ];
-        });
+                return [
+                    'conversation_id' => $conversation->id,
+                    'message' => $message,
+                ];
+            });
+        } catch (Throwable $exception) {
+            if ($storedAttachmentPath !== null) {
+                Storage::disk('local')->delete($storedAttachmentPath);
+            }
+
+            throw $exception;
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -362,6 +431,8 @@ class MessagesPage extends Component
         $this->newRecipientId = null;
 
         $this->messageContent = '';
+        $this->attachment = null;
+        $this->gifUrl = null;
 
         $this->lastMessageId = $result['message']->id;
 
@@ -386,6 +457,28 @@ class MessagesPage extends Component
         $this->dispatch(
             'conversation-scroll-bottom'
         );
+    }
+
+    public function removeAttachment(): void
+    {
+        $this->attachment = null;
+    }
+
+    public function selectGif(string $url): void
+    {
+        if (! $this->isAllowedGifUrl($url)) {
+            $this->addError('gifUrl', 'Choose a GIF from the GIPHY picker.');
+
+            return;
+        }
+
+        $this->resetErrorBag('gifUrl');
+        $this->gifUrl = $url;
+    }
+
+    public function removeGif(): void
+    {
+        $this->gifUrl = null;
     }
 
     /*
@@ -530,6 +623,7 @@ class MessagesPage extends Component
         $this->activeConversationId = null;
         $this->newRecipientId = null;
         $this->messageContent = '';
+        $this->gifUrl = null;
         $this->lastMessageId = null;
     }
 
@@ -542,41 +636,38 @@ class MessagesPage extends Component
     {
         $viewer = $this->currentUser();
 
-        /*
-        |--------------------------------------------------------------------------
-        | ACCEPTED CONVERSATIONS ONLY
-        |--------------------------------------------------------------------------
-        |
-        | IMPORTANT:
-        |
-        | Requests yahan nahi aayengi.
-        |
-        | User tabhi Messages me dikhega jab current user's
-        | accepted_at NOT NULL ho.
-        |
-        |--------------------------------------------------------------------------
-        */
         $conversations = $viewer
             ->conversations()
             ->whereNotNull('conversation_user.accepted_at')
+            ->when(trim($this->search) !== '', function ($query) {
+                $term = '%'.trim($this->search).'%';
+                $currentUserId = $this->currentUser()->id;
+
+                $query->where(function ($q) use ($term, $currentUserId) {
+                    $q->whereHas('users', function (Builder $users) use ($term, $currentUserId) {
+                        $users->where('users.id', '!=', $currentUserId)
+                            ->where('users.name', 'like', $term);
+                    })->orWhereHas('messages', function (Builder $messages) use ($term) {
+                        $messages->where('content', 'like', $term);
+                    });
+                });
+            })
             ->with([
                 'users.profile',
                 'latestMessage.sender',
             ])
             ->withCount([
-                'messages as unread_messages_count' =>
-                    fn (Builder $query) => $query
-                        ->where('sender_id', '!=', $viewer->id)
-                        ->whereNull('read_at'),
+                'messages as unread_messages_count' => fn (Builder $query) => $query
+                    ->where('sender_id', '!=', $viewer->id)
+                    ->whereNull('read_at'),
             ])
             ->orderByDesc('conversations.updated_at')
             ->orderByDesc('conversations.id')
             ->get()
             ->unique(
-                fn (Conversation $conversation): string =>
-                    $conversation->direct_pair_key
-                        ? 'direct:' . $conversation->direct_pair_key
-                        : 'group:' . $conversation->id
+                fn (Conversation $conversation): string => $conversation->direct_pair_key
+                        ? 'direct:'.$conversation->direct_pair_key
+                        : 'group:'.$conversation->id
             )
             ->values();
 
@@ -609,19 +700,7 @@ class MessagesPage extends Component
                 ->reverse()
                 ->values();
 
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | NEW MESSAGE BOX
-        |--------------------------------------------------------------------------
-        |
-        | Yahan conversation nahi hai.
-        |
-        | Sirf recipient hai.
-        |--------------------------------------------------------------------------
-        */
-        elseif ($this->newRecipientId) {
+        } elseif ($this->newRecipientId) {
 
             $recipient = User::query()
                 ->with('profile')
@@ -662,6 +741,25 @@ class MessagesPage extends Component
         return $user;
     }
 
+    private function isAllowedGifUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+
+        if (! is_array($parts)) {
+            return false;
+        }
+
+        $host = strtolower($parts['host'] ?? '');
+        $path = strtolower($parts['path'] ?? '');
+
+        return ($parts['scheme'] ?? null) === 'https'
+            && preg_match('/\Amedia\d*\.giphy\.com\z/', $host) === 1
+            && str_ends_with($path, '.gif')
+            && ! isset($parts['user'])
+            && ! isset($parts['pass'])
+            && ! isset($parts['port']);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Find conversation belonging to current user
@@ -674,10 +772,9 @@ class MessagesPage extends Component
             ->whereKey($conversationId)
             ->whereHas(
                 'users',
-                fn (Builder $query) =>
-                    $query->whereKey(
-                        $this->currentUser()->id
-                    )
+                fn (Builder $query) => $query->whereKey(
+                    $this->currentUser()->id
+                )
             )
             ->firstOrFail();
     }
@@ -718,7 +815,7 @@ class MessagesPage extends Component
 
         sort($userIds);
 
-        return $userIds[0] . ':' . $userIds[1];
+        return $userIds[0].':'.$userIds[1];
     }
 
     /*

@@ -88,6 +88,8 @@
 
                             @if ($slide->image)
                                 <img src="{{ asset('storage/' . $slide->image) }}" alt="{{ $slide->title }}"
+                                    loading="{{ $loop->first ? 'eager' : 'lazy' }}" decoding="async"
+                                    fetchpriority="{{ $loop->first ? 'high' : 'low' }}"
                                     class="absolute inset-0 h-full w-full object-cover object-center">
 
                                 {{-- Dark overlay so text remains readable --}}
@@ -107,7 +109,7 @@
                             {{-- ================================= --}}
 
                             <div
-                                class="relative z-10 flex h-full max-w-2xl flex-col justify-center px-6 py-8 sm:px-10 lg:px-14">
+                                class="editorial-media-copy relative z-10 flex h-full max-w-2xl flex-col justify-center px-6 py-8 sm:px-10 lg:px-14">
 
                                 {{-- Tag --}}
                                 @if ($slide->tag)
@@ -317,6 +319,7 @@
                                                 @if ($reelProfile?->profile_picture)
                                                     <img src="{{ asset('storage/' . $reelProfile->profile_picture) }}"
                                                         alt="{{ $reelUser?->name }}"
+                                                        loading="lazy" decoding="async"
                                                         class="h-full w-full object-cover">
                                                 @else
                                                     {{ Str::substr($reelUser?->name ?? 'U', 0, 1) }}
@@ -362,6 +365,7 @@
                                                         @if ($reelProductImage)
                                                             <img src="{{ asset('storage/' . $reelProductImage) }}"
                                                                 alt="{{ $reelProduct->name }}"
+                                                                loading="lazy" decoding="async"
                                                                 class="h-full w-full object-cover">
                                                         @else
                                                             <x-heroicon-o-shopping-bag class="size-5 text-slate-500" />
@@ -428,6 +432,7 @@
                                     @if ($reel->thumbnail)
                                         <img src="{{ asset('storage/' . $reel->thumbnail) }}"
                                             alt="Reel by {{ $reelProfile?->username ?? $reelUser?->name }}"
+                                            loading="lazy" decoding="async"
                                             class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
                                     @else
                                         <div class="absolute inset-0 flex items-center justify-center bg-slate-950">
@@ -569,6 +574,7 @@
                             class="theme-card flex size-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-800 text-slate-300 transition group-hover:border-(--accent-primary) group-hover:text-(--accent-text)">
                             @if ($category->image)
                                 <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
+                                    loading="lazy" decoding="async"
                                     class="h-full w-full object-cover">
                             @else
                                 <x-heroicon-o-tag class="size-6" />
@@ -623,6 +629,7 @@
                                     class="relative block aspect-square overflow-hidden bg-slate-950">
                                     @if ($img)
                                         <img src="{{ asset('storage/' . $img) }}" alt="{{ $product->name }}"
+                                            loading="lazy" decoding="async"
                                             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                                     @else
                                         <div class="flex h-full w-full items-center justify-center text-slate-600">
@@ -695,6 +702,7 @@
                                 class="group theme-card relative block aspect-[3/4] overflow-hidden rounded-2xl border border-slate-800/80">
                                 @if ($reel->thumbnail)
                                     <img src="{{ asset('storage/' . $reel->thumbnail) }}" alt="Reel"
+                                        loading="lazy" decoding="async"
                                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                                 @endif
                                 <span class="absolute inset-0 flex items-center justify-center">
@@ -743,6 +751,7 @@
                             class="theme-inner mt-3 block aspect-[4/3] overflow-hidden rounded-xl">
                             @if ($dealImg)
                                 <img src="{{ asset('storage/' . $dealImg) }}" alt="{{ $dealProduct->name }}"
+                                    loading="lazy" decoding="async"
                                     class="h-full w-full object-cover">
                             @else
                                 <div class="flex h-full w-full items-center justify-center text-slate-600">

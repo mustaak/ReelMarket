@@ -43,7 +43,8 @@
                                 <span class="flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-[var(--bg-inner)] bg-slate-900 text-sm font-black text-white">
                                     @if ($suggestion->profile?->profile_picture)
                                         <img src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
-                                            alt="{{ $suggestion->name }}" class="size-full object-cover">
+                                            alt="{{ $suggestion->name }}" loading="lazy" decoding="async"
+                                            class="size-full object-cover">
                                     @else
                                         {{ strtoupper(substr($suggestion->name, 0, 1)) }}
                                     @endif
@@ -54,7 +55,8 @@
                                 class="flex size-14 items-center justify-center overflow-hidden rounded-full bg-slate-800 text-sm font-black text-slate-300">
                                 @if ($suggestion->profile?->profile_picture)
                                     <img src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
-                                        alt="{{ $suggestion->name }}" class="size-full object-cover">
+                                        alt="{{ $suggestion->name }}" loading="lazy" decoding="async"
+                                        class="size-full object-cover">
                                 @else
                                     {{ strtoupper(substr($suggestion->name, 0, 1)) }}
                                 @endif
@@ -143,7 +145,8 @@
                                 <span class="flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-[var(--bg-card)] bg-slate-900 text-xs font-black text-white">
                                     @if ($suggestion->profile?->profile_picture)
                                         <img src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
-                                            alt="{{ $suggestion->name }}" class="size-full object-cover">
+                                            alt="{{ $suggestion->name }}" loading="lazy" decoding="async"
+                                            class="size-full object-cover">
                                     @else
                                         {{ strtoupper(substr($suggestion->name, 0, 1)) }}
                                     @endif
@@ -154,7 +157,8 @@
                                 class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-800 text-xs font-black text-slate-300">
                                 @if ($suggestion->profile?->profile_picture)
                                     <img src="{{ asset('storage/' . $suggestion->profile->profile_picture) }}"
-                                        alt="{{ $suggestion->name }}" class="size-full object-cover">
+                                        alt="{{ $suggestion->name }}" loading="lazy" decoding="async"
+                                        class="size-full object-cover">
                                 @else
                                     {{ strtoupper(substr($suggestion->name, 0, 1)) }}
                                 @endif

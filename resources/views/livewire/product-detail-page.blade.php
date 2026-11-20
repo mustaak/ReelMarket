@@ -30,6 +30,8 @@
                             <img src="{{ $imageUrls->first() }}"
                                  :src="@js($imageUrls)[active]"
                                  alt="{{ $product->name }}"
+                                 fetchpriority="high"
+                                 decoding="async"
                                  class="h-full w-full object-cover">
                         @else
                             <div class="flex h-full w-full items-center justify-center text-xs font-black uppercase tracking-[0.28em] text-slate-600">
@@ -55,7 +57,8 @@
                                         ? 'border-(--accent-primary) ring-2 ring-(--accent-primary)/30 scale-[0.98]'
                                         : 'border-slate-800 opacity-75 hover:opacity-100'"
                                     class="aspect-square overflow-hidden rounded-2xl border bg-slate-950 transition-all">
-                                <img src="{{ $url }}" alt="" class="h-full w-full object-cover">
+                                <img src="{{ $url }}" alt="" loading="lazy" decoding="async"
+                                     class="h-full w-full object-cover">
                             </button>
                         @endforeach
                     </div>
@@ -201,7 +204,7 @@
                         <a href="{{ route('product.detail', $related->slug ?? $related->id) }}" class="relative block overflow-hidden rounded-2xl border border-slate-900 bg-slate-950">
                             <div class="aspect-[4/5] w-full">
                                 @if($relImg)
-                                    <img src="{{ asset('storage/' . $relImg) }}" alt="{{ $related->name }}" loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                    <img src="{{ asset('storage/' . $relImg) }}" alt="{{ $related->name }}" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
                                 @else
                                     <div class="flex h-full w-full items-center justify-center text-[10px] font-black uppercase tracking-[0.22em] text-slate-600">
                                         Image
